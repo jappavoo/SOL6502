@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/misc/uchess.in", "start": 196608, "end": 196755}], "remote_package_size": 196755, "package_uuid": "561fbf57-8615-453b-b72b-e3a13040bcc1"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/misc/uchess.in", "start": 196608, "end": 196755}], "remote_package_size": 196755, "package_uuid": "e86358b7-8228-41a2-aaff-58c51e3e7d1e"});
   
   })();
   
@@ -216,89 +216,89 @@ Module['FS_createPath']("/", "misc", true, true);
   var AnimationSpeed = 1000;
 
 class Info {
-  #label;
+  label;
   constructor(label) {
-      this.#label = label;
+      this.label = label;
   }
     
   set(v) {
-      this.#label.textContent = v;
+      this.label.textContent = v;
   }
 };
 
 class MemoryLoc {
-    #addrLabel;
-    #valueLabel;
-    #rect;
-    #afill;
-    #vfill;
-    #rfill;
+    addrLabel;
+    valueLabel;
+    rect;
+    afill;
+    vfill;
+    rfill;
     
     constructor(alabel, vlabel, r) {
-	this.#addrLabel  = alabel;
-	this.#valueLabel = vlabel;
-	this.#rect       = r;
-	this.#afill = this.#addrLabel.style.fill;
-	this.#afill = this.#valueLabel.style.fill;
-	this.#rfill = this.#rect.style.fill;
+	this.addrLabel  = alabel;
+	this.valueLabel = vlabel;
+	this.rect       = r;
+	this.afill = this.addrLabel.style.fill;
+	this.afill = this.valueLabel.style.fill;
+	this.rfill = this.rect.style.fill;
     }
     
     set(a,v) {
-	this.#addrLabel.textContent = a;
-	this.#valueLabel.textContent = v;
+	this.addrLabel.textContent = a;
+	this.valueLabel.textContent = v;
     }
 
     setValue(v) {
-	this.#valueLabel.textContent = v;
+	this.valueLabel.textContent = v;
     }
 
     setFill(afill, vfill, rfill) {
-	this.#addrLabel.style.fill = afill;
-	this.#valueLabel.style.fill = vfill;
-	this.#rect.style.fill = rfill;
+	this.addrLabel.style.fill = afill;
+	this.valueLabel.style.fill = vfill;
+	this.rect.style.fill = rfill;
     }
 
     resetFill(delay) {
 	if (delay > 0) {
-	    setTimeout(() => { this.setFill(this.#afill, this.#vfill, this.#rfill); }, delay);
+	    setTimeout(() => { this.setFill(this.afill, this.vfill, this.rfill); }, delay);
 	} else {
-	    this.setFill(this.#afill, this.#vfill, this.#rfill);
+	    this.setFill(this.afill, this.vfill, this.rfill);
 	}
     }
 };
 
 class Register {
-    #value = 0;
-    #bits = 8;
-    #label;
-    #buses = [];
+    value = 0;
+    bits = 8;
+    label;
+    buses = [];
     
     constructor(bits, v, label) {
-	this.#bits = bits;
-	this.#value = v & ((1<<bits)-1);
-	this.#label = label;
+	this.bits = bits;
+	this.value = v & ((1<<bits)-1);
+	this.label = label;
     }
     
     valueToString() {
-	var s = this.#value.toString(2);
-	while (s.length < this.#bits) s = "0" + s;
+	var s = this.value.toString(2);
+	while (s.length < this.bits) s = "0" + s;
 	return s;
     }
     
     set(v) {
-	this.#value = v & ((1<<this.#bits)-1);
-	this.#label.textContent = this.valueToString();
-	for (const bus of this.#buses)  {
+	this.value = v & ((1<<this.bits)-1);
+	this.label.textContent = this.valueToString();
+	for (const bus of this.buses)  {
 	    bus.activate(this);
 	}
     }
     
     get() {
-	return this.#value;
+	return this.value;
     }
 
     addBus(bus) {
-	this.#buses.push(bus);
+	this.buses.push(bus);
     }
     
 };
@@ -310,22 +310,22 @@ class MC {
 };
 
 class Sprite {
-    #path  = null;
-    #sprite = null;
+    path  = null;
+    sprite = null;
 
     logpos() {
-	console.log("cur: " + this.#sprite.cx.baseVal.value + " " + this.#sprite.cy.baseVal.value);
+	console.log("cur: " + this.sprite.cx.baseVal.value + " " + this.sprite.cy.baseVal.value);
     }
     pathColor(color) {
-	this.#path.style.stroke = color;
+	this.path.style.stroke = color;
     }
     spriteFillColor(color) {
-	this.#sprite.style.fill = color;
+	this.sprite.style.fill = color;
     }
     // Initialize the dot: connect sprite and track properties with supplied SVG elements
     constructor(pathid, spriteid) {
-	this.#path = document.getElementById(pathid);
-        this.#sprite = document.getElementById(spriteid);
+	this.path = document.getElementById(pathid);
+        this.sprite = document.getElementById(spriteid);
 //	this.logpos();
 //	this.pathColor('yellow');
 //	this.spriteFillColor('red');
@@ -334,10 +334,10 @@ class Sprite {
     
     // Put the dot on its spot
     move(u) {
-        const p = this.#path.getPointAtLength(u * this.#path.getTotalLength());
-//	let y = p.y - (this.#sprite.getBBox().height)/2;
-	this.#sprite.cx.baseVal.value = p.x;
-	this.#sprite.cy.baseVal.value = p.y;
+        const p = this.path.getPointAtLength(u * this.path.getTotalLength());
+//	let y = p.y - (this.sprite.getBBox().height)/2;
+	this.sprite.cx.baseVal.value = p.x;
+	this.sprite.cy.baseVal.value = p.y;
     }
 
     reset() {
@@ -347,16 +347,16 @@ class Sprite {
 
 
 class SpriteAnimation {
-    #sprite = null;
-    #finFunc = null;
+    sprite = null;
+    finFunc = null;
     
     constructor(pathid, spriteid) {
-	this.#sprite = new Sprite(pathid, spriteid);
+	this.sprite = new Sprite(pathid, spriteid);
     }
     
     start(dir, finishFunc) {
         this.tZero = Date.now();
-	this.#finFunc = finishFunc;
+	this.finFunc = finishFunc;
 	
         requestAnimationFrame(() => this.run(dir));
     }
@@ -376,7 +376,7 @@ class SpriteAnimation {
 	if (dir == -1) {
 	    u = 1 - u;
 	}
-	this.#sprite.move(u);
+	this.sprite.move(u);
 
 	if (finished) this.onFinish();
 
@@ -384,25 +384,25 @@ class SpriteAnimation {
     
     onFinish() {
 	// console.log("onFinish");
-	//this.#sprite.reset();
-	if (this.#finFunc != null) this.#finFunc();
+	//this.sprite.reset();
+	if (this.finFunc != null) this.finFunc();
     }
 };
 
 
 class Bus {
-    #anim = null;
+    anim = null;
     active = false;
     
     constructor(pathid, spriteid) {
-	this.#anim = new SpriteAnimation(pathid, spriteid);
+	this.anim = new SpriteAnimation(pathid, spriteid);
     }
 
     activate(dir) {
 	if (AnimationSpeed > 0) {
 //	    console.log("dir: " + dir);
 	    this.active = true;
-	    this.#anim.start(dir,()=>{
+	    this.anim.start(dir,()=>{
 //		console.log("BUS: Activate finished");
 		this.active = false;
 //		Module.ccall('c_done', // name of C function
