@@ -1,5 +1,11 @@
-<script src="SOL6502.js"></script>
-
+<!doctype html>
+<html>
+    <head>
+      <script src="SOL6502.js"></script>
+      <link rel="stylesheet" href="node_modules/xterm/css/xterm.css" />
+      <script src="node_modules/xterm/lib/xterm.js"></script>
+    </head>
+<body>
 <svg
    width="1920"
    height="1080"
@@ -1705,3 +1711,7 @@
 <button onclick="SOL6502.run()">halt</button>
 <button onclick="SOL6502.run()">reset</button>
 </p>
+<h2>SOL6502 ASCII CONSOLE DEVICE</h2>
+<div id="console"></div>
+</body>
+</html>

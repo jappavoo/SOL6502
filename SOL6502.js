@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/misc/uchess.in", "start": 196608, "end": 196755}], "remote_package_size": 196755, "package_uuid": "e86358b7-8228-41a2-aaff-58c51e3e7d1e"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/misc/uchess.in", "start": 196608, "end": 196755}], "remote_package_size": 196755, "package_uuid": "88d80ff0-b412-4cfa-a2a4-9d481fb70258"});
   
   })();
   
@@ -461,10 +461,22 @@ const SOL6502 = {
 	this.MC_MEM_ABUS = new Bus('MC-MEM-ABUS','ABV');
 	this.DBB_MC_DBUS = new Bus('DBB-MC-DBUS', 'DBV');
 	this.MC_MEM_DBUS = new Bus('MC-MEM-DBUS','DBV');
-	
-//	bus.addObj(this.ABB);
-//	bus.addObj(this.MC);
-//	this.ABR.addBus(bus);
+        this.console = new Terminal({
+	    cols: 72,
+	    rows:22,
+	    theme:{ background: '#000000', foreground:'#00ff00' }
+	});
+        this.console.open(document.getElementById('console'));
+	/*
+	for (let i=0; i<this.console.cols; i++) {
+	    this.console.write('' + i%10);
+	}
+	this.console.writeln('');
+	for (let i=0; i<this.console.rows; i++) {
+	    this.console.writeln("line: " + i);
+	}
+	*/
+        this.console.write('SOL6502 Console NOT CONNECTED YET.')
     },
     
     step: function() {
@@ -2231,7 +2243,7 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  18831: function() {SOL6502.mainRun()}
+  15919: function() {SOL6502.mainRun()}
 };
 function activateABR_MC_ABUS(dir){ SOL6502.ABR_MC_ABUS.activate(dir); }
 function activateDBB_MC_DBUS(dir){ SOL6502.DBB_MC_DBUS.activate(dir); }
@@ -2357,11 +2369,6 @@ function setY(byte){ SOL6502.Y.set(byte); }
       abort('Assertion failed: ' + UTF8ToString(condition) + ', at: ' + [filename ? UTF8ToString(filename) : 'unknown filename', line, func ? UTF8ToString(func) : 'unknown function']);
     }
 
-  function setErrNo(value) {
-      HEAP32[((___errno_location())>>2)] = value;
-      return value;
-    }
-  
   var PATH = {splitPath:function(filename) {
         var splitPathRe = /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
         return splitPathRe.exec(filename).slice(1);
@@ -4708,63 +4715,6 @@ function setY(byte){ SOL6502.Y.set(byte); }
         else assert(high === -1);
         return low;
       }};
-  function ___syscall_fcntl64(fd, cmd, varargs) {SYSCALLS.varargs = varargs;
-  try {
-  
-      var stream = SYSCALLS.getStreamFromFD(fd);
-      switch (cmd) {
-        case 0: {
-          var arg = SYSCALLS.get();
-          if (arg < 0) {
-            return -28;
-          }
-          var newStream;
-          newStream = FS.open(stream.path, stream.flags, 0, arg);
-          return newStream.fd;
-        }
-        case 1:
-        case 2:
-          return 0;  // FD_CLOEXEC makes no sense for a single process.
-        case 3:
-          return stream.flags;
-        case 4: {
-          var arg = SYSCALLS.get();
-          stream.flags |= arg;
-          return 0;
-        }
-        case 5:
-        /* case 5: Currently in musl F_GETLK64 has same value as F_GETLK, so omitted to avoid duplicate case blocks. If that changes, uncomment this */ {
-          
-          var arg = SYSCALLS.get();
-          var offset = 0;
-          // We're always unlocked.
-          HEAP16[(((arg)+(offset))>>1)] = 2;
-          return 0;
-        }
-        case 6:
-        case 7:
-        /* case 6: Currently in musl F_SETLK64 has same value as F_SETLK, so omitted to avoid duplicate case blocks. If that changes, uncomment this */
-        /* case 7: Currently in musl F_SETLKW64 has same value as F_SETLKW, so omitted to avoid duplicate case blocks. If that changes, uncomment this */
-          
-          
-          return 0; // Pretend that the locking is successful.
-        case 16:
-        case 8:
-          return -28; // These are for sockets. We don't have them fully implemented yet.
-        case 9:
-          // musl trusts getown return values, due to a bug where they must be, as they overlap with errors. just return -1 here, so fnctl() returns that, and we set errno ourselves.
-          setErrNo(28);
-          return -1;
-        default: {
-          return -28;
-        }
-      }
-    } catch (e) {
-    if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) throw e;
-    return -e.errno;
-  }
-  }
-
   function ___syscall_ioctl(fd, op, varargs) {SYSCALLS.varargs = varargs;
   try {
   
@@ -4826,17 +4776,6 @@ function setY(byte){ SOL6502.Y.set(byte); }
       var mode = varargs ? SYSCALLS.get() : 0;
       var stream = FS.open(pathname, flags, mode);
       return stream.fd;
-    } catch (e) {
-    if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) throw e;
-    return -e.errno;
-  }
-  }
-
-  function ___syscall_unlink(path) {try {
-  
-      path = SYSCALLS.getStr(path);
-      FS.unlink(path);
-      return 0;
     } catch (e) {
     if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) throw e;
     return -e.errno;
@@ -5497,10 +5436,8 @@ function tryParseAsDataURI(filename) {
 
 var asmLibraryArg = {
   "__assert_fail": ___assert_fail,
-  "__syscall_fcntl64": ___syscall_fcntl64,
   "__syscall_ioctl": ___syscall_ioctl,
   "__syscall_open": ___syscall_open,
-  "__syscall_unlink": ___syscall_unlink,
   "activateABR_MC_ABUS": activateABR_MC_ABUS,
   "activateDBB_MC_DBUS": activateDBB_MC_DBUS,
   "activateMC_MEM_ABUS": activateMC_MEM_ABUS,
@@ -5612,19 +5549,19 @@ var dynCall_iii = Module["dynCall_iii"] = createExportWrapper("dynCall_iii");
 var dynCall_viii = Module["dynCall_viii"] = createExportWrapper("dynCall_viii");
 
 /** @type {function(...*):?} */
-var dynCall_v = Module["dynCall_v"] = createExportWrapper("dynCall_v");
-
-/** @type {function(...*):?} */
 var dynCall_vi = Module["dynCall_vi"] = createExportWrapper("dynCall_vi");
 
 /** @type {function(...*):?} */
-var dynCall_jiji = Module["dynCall_jiji"] = createExportWrapper("dynCall_jiji");
+var dynCall_v = Module["dynCall_v"] = createExportWrapper("dynCall_v");
+
+/** @type {function(...*):?} */
+var dynCall_ii = Module["dynCall_ii"] = createExportWrapper("dynCall_ii");
 
 /** @type {function(...*):?} */
 var dynCall_iiii = Module["dynCall_iiii"] = createExportWrapper("dynCall_iiii");
 
 /** @type {function(...*):?} */
-var dynCall_ii = Module["dynCall_ii"] = createExportWrapper("dynCall_ii");
+var dynCall_jiji = Module["dynCall_jiji"] = createExportWrapper("dynCall_jiji");
 
 /** @type {function(...*):?} */
 var dynCall_iidiiii = Module["dynCall_iidiiii"] = createExportWrapper("dynCall_iidiiii");
