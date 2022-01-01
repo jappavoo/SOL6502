@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}], "remote_package_size": 262291, "package_uuid": "dfcb8518-33ca-4bce-862b-02b5ff1497bb"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}], "remote_package_size": 262291, "package_uuid": "66597571-7c04-4b8e-98cb-bd9c99563004"});
   
   })();
   
@@ -2255,7 +2255,7 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  16175: function() {SOL6502.mainRun()}
+  16233: function() {SOL6502.mainRun()}
 };
 function activateABR_MC_ABUS(dir){ SOL6502.ABR_MC_ABUS.activate(dir); }
 function activateDBB_MC_DBUS(dir){ SOL6502.DBB_MC_DBUS.activate(dir); }
@@ -2263,7 +2263,7 @@ function activateMC_MEM_ABUS(dir){ SOL6502.MC_MEM_ABUS.activate(dir); }
 function activateMC_MEM_DBUS(dir){ SOL6502.MC_MEM_DBUS.activate(dir); }
 function decodeEnd(){ SOL6502.decodeCircle.style.fill = "#ffffff"; }
 function decodeStart(){ SOL6502.decodeCircle.style.fill = "#00ff00"; }
-function executeEnd(){ SOL6502.executeCircle.style.fill = "#ffffff"; }
+function executeEnd(){ SOL6502.executeCircle.style.fill = "#ffffff"; SOL6502.ADDRMODEINFO.set(""); SOL6502.OPCODEINFO.set(""); }
 function executeStart(){ SOL6502.executeCircle.style.fill = "#00ff00"; }
 function fetchEnd(){ SOL6502.fetchCircle.style.fill = "#ffffff"; }
 function fetchStart(){ SOL6502.fetchCircle.style.fill = "#00ff00"; }
