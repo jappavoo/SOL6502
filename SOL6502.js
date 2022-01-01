@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/misc/uchess.in", "start": 196608, "end": 196755}], "remote_package_size": 196755, "package_uuid": "88d80ff0-b412-4cfa-a2a4-9d481fb70258"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/misc/uchess.in", "start": 196608, "end": 196755}], "remote_package_size": 196755, "package_uuid": "64d5a8a7-f338-4ab9-b0d7-263b92c5d65e"});
   
   })();
   
@@ -324,6 +324,7 @@ class Sprite {
     }
     // Initialize the dot: connect sprite and track properties with supplied SVG elements
     constructor(pathid, spriteid) {
+//	console.log("pathid: " + pathid + " spriteid: " + spriteid); 
 	this.path = document.getElementById(pathid);
         this.sprite = document.getElementById(spriteid);
 //	this.logpos();
@@ -444,6 +445,8 @@ const SOL6502 = {
 	this.ADDRMODEINFO = new Info(document.getElementById('ADDRMODEInfoText'));
 	this.OPCODEINFO = new Info(document.getElementById('OPCODEInfoText'));
 
+	this.memScroll = new Sprite('memScroll','memCircle');
+	
 	this.memLocs = [];
 
 	for (let i = 0; i<24; i++) {
@@ -2243,7 +2246,7 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  15919: function() {SOL6502.mainRun()}
+  15963: function() {SOL6502.mainRun()}
 };
 function activateABR_MC_ABUS(dir){ SOL6502.ABR_MC_ABUS.activate(dir); }
 function activateDBB_MC_DBUS(dir){ SOL6502.DBB_MC_DBUS.activate(dir); }
@@ -2262,6 +2265,7 @@ function setIR(byte){ SOL6502.IR.set(byte); }
 function setMEMLoc(i,addr,value){ SOL6502.memLocs[i].set(UTF8ToString(addr),UTF8ToString(value)); }
 function setMEMLocFill(i,ac,vc,rc){ SOL6502.memLocs[i].setFill(UTF8ToString(ac),UTF8ToString(vc), UTF8ToString(rc)); }
 function setMEMLocValue(i,value){ SOL6502.memLocs[i].setValue(UTF8ToString(value)); }
+function setMEMScoll(u){ SOL6502.memScroll.move(u); }
 function setOPCODEInfo(text){ SOL6502.OPCODEINFO.set(UTF8ToString(text)); }
 function setP(byte){ SOL6502.P.set(byte); }
 function setPC(addr){ SOL6502.PC.set(addr); }
@@ -5465,6 +5469,7 @@ var asmLibraryArg = {
   "setMEMLoc": setMEMLoc,
   "setMEMLocFill": setMEMLocFill,
   "setMEMLocValue": setMEMLocValue,
+  "setMEMScoll": setMEMScoll,
   "setOPCODEInfo": setOPCODEInfo,
   "setP": setP,
   "setPC": setPC,

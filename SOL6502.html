@@ -626,7 +626,7 @@
 -->
   <ellipse
      style="fill:#ffffff;stroke:#000000;stroke-width:7.333;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     id="path78516"
+     id="fetchCircle"
      cx="922.99084"
      cy="215.97136"
      rx="39.981812"
@@ -653,14 +653,14 @@
        y="386.48029">Execute</tspan></text>
   <ellipse
      style="fill:#ffffff;stroke:#000000;stroke-width:7.333;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     id="path78516-6"
+     id="decodeCircle"
      cx="1001.5599"
      cy="325.60562"
      rx="39.981812"
      ry="37.837746" />
   <ellipse
      style="fill:#ffffff;stroke:#000000;stroke-width:7.333;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     id="path78516-4"
+     id="executeCircle"
      cx="854.0517"
      cy="325.60562"
      rx="39.981812"
@@ -1564,14 +1564,13 @@
   <path
      style="fill:none;stroke:#000000;stroke-width:1.98205;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
      d="m 1697.8924,69.738731 5.0444,923.615379"
-     id="path115438" />
-  <ellipse
+     id="memScroll" />
+  <circle
      style="fill:#000000;stroke:#000000;stroke-width:2.10956;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     id="path115542"
+     id="memCircle"
      cx="1698.1385"
      cy="82.592339"
-     rx="17.842855"
-     ry="17.842857" />
+     r="17.842855" />
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:42.6667px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none"
@@ -1687,7 +1686,7 @@
      r="9.0083704"
      inkscape:label="ABV">
     <desc
-       id="desc3495">Address Value that can flow along address bus paths</desc>
+       id="desc3495">Address Value that can flow along address bus path</desc>
     <title
        id="title3493">Address Bus Value</title>
   </circle>
@@ -1708,8 +1707,8 @@
 <p>
 <button onclick="SOL6502.step()">step</button>
 <button onclick="SOL6502.run()">run</button>
-<button onclick="SOL6502.run()">halt</button>
-<button onclick="SOL6502.run()">reset</button>
+<button onclick="SOL6502.halt()">halt</button>
+<button onclick="SOL6502.reset()">reset</button>
 </p>
 <h2>SOL6502 ASCII CONSOLE DEVICE</h2>
 <div id="console"></div>
