@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/misc/uchess.in", "start": 196608, "end": 196755}], "remote_package_size": 196755, "package_uuid": "64d5a8a7-f338-4ab9-b0d7-263b92c5d65e"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}], "remote_package_size": 262291, "package_uuid": "dfcb8518-33ca-4bce-862b-02b5ff1497bb"});
   
   })();
   
@@ -336,7 +336,6 @@ class Sprite {
     // Put the dot on its spot
     move(u) {
         const p = this.path.getPointAtLength(u * this.path.getTotalLength());
-//	let y = p.y - (this.sprite.getBBox().height)/2;
 	this.sprite.cx.baseVal.value = p.x;
 	this.sprite.cy.baseVal.value = p.y;
     }
@@ -373,7 +372,6 @@ class SpriteAnimation {
             finished = true;
         }
 
-//	console.log("run : dir: " + dir);
 	if (dir == -1) {
 	    u = 1 - u;
 	}
@@ -404,12 +402,7 @@ class Bus {
 //	    console.log("dir: " + dir);
 	    this.active = true;
 	    this.anim.start(dir,()=>{
-//		console.log("BUS: Activate finished");
 		this.active = false;
-//		Module.ccall('c_done', // name of C function
-//		     null, // return type
-//		     ['number'], // argument types
-//		     [1]); // arguments
 	    })
 	} 
     }
@@ -454,12 +447,8 @@ const SOL6502 = {
 	    this.memLocs[i] = new MemoryLoc(document.getElementById('MEM'+i+'AddrText'),
 					    document.getElementById('MEM'+i+'ValueText'),
 					    document.getElementById('MEM'+i+'Rect'));
-	    //	    this.memLocs[i].set('A: ' + i, 'V: ' + i);
-	    // this.memLocs[i].setFill('red', 'black', 'red');
-	    // this.memLocs[i].resetFill(300);
 	}
 	
-	//	this.MC = new MC();
         this.ABR_MC_ABUS = new Bus('ABR-MC-ABUS','ABV');
 	this.MC_MEM_ABUS = new Bus('MC-MEM-ABUS','ABV');
 	this.DBB_MC_DBUS = new Bus('DBB-MC-DBUS', 'DBV');
@@ -479,30 +468,50 @@ const SOL6502 = {
 	    this.console.writeln("line: " + i);
 	}
 	*/
-        this.console.write('SOL6502 Console NOT CONNECTED YET.')
+	this.busy = false;
+	this.consoleActive = false;
+	this.stepButton = document.getElementById("stepButton");
+	this.fetchCircle = document.getElementById("fetchCircle");
+	this.decodeCircle = document.getElementById("decodeCircle");
+	this.executeCircle = document.getElementById("executeCircle");
+	this.loopCircle = document.getElementById("loopCircle");
+	this.hideLoopCircle();
+    },
+
+    hideLoopCircle: function() {
+	this.loopCircle.style.opacity = 0;
+//	this.loopCircle.style.stroke-opacity = 0; 
+    },
+    
+    writeConsole: function(buf) {
+	this.consoleActive = true;
+	this.console.writeUtf8(buf, ()=>{
+	    this.consoleActive = false;
+	});
     },
     
     step: function() {
 	// console.log("SOL6502.step()")
+	if (this.busy) return;
+	this.busy = true;
+	this.stepButton.disabled = true;
 	Module.ccall('c_step', // name of C function
 		     null, // return type
 		     ['number'], // argument types
 		     [1], // arguments
 		     {async: true}).then(result => {
-		      console.log("step: done");
+			 this.busy = false;
+			 this.stepButton.disabled = false;
+//			 console.log("step: done");
 		     });
-	// console.log("result: " + result);
-	// this.ABB.set(this.ABB.get()+1);
     },
 
     run: function() {
 	// console.log("SOL6502.step()")
-	var result = Module.ccall('c_run', // name of C function
+	var result = Module.ccall('c_run',
 				  'number',
 				  ['number'],
 				 [1]);
-	// console.log("result: " + result);
-	// this.ABB.set(this.ABB.get()+1);
     }
 };
 
@@ -2246,13 +2255,20 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  15963: function() {SOL6502.mainRun()}
+  16175: function() {SOL6502.mainRun()}
 };
 function activateABR_MC_ABUS(dir){ SOL6502.ABR_MC_ABUS.activate(dir); }
 function activateDBB_MC_DBUS(dir){ SOL6502.DBB_MC_DBUS.activate(dir); }
 function activateMC_MEM_ABUS(dir){ SOL6502.MC_MEM_ABUS.activate(dir); }
 function activateMC_MEM_DBUS(dir){ SOL6502.MC_MEM_DBUS.activate(dir); }
+function decodeEnd(){ SOL6502.decodeCircle.style.fill = "#ffffff"; }
+function decodeStart(){ SOL6502.decodeCircle.style.fill = "#00ff00"; }
+function executeEnd(){ SOL6502.executeCircle.style.fill = "#ffffff"; }
+function executeStart(){ SOL6502.executeCircle.style.fill = "#00ff00"; }
+function fetchEnd(){ SOL6502.fetchCircle.style.fill = "#ffffff"; }
+function fetchStart(){ SOL6502.fetchCircle.style.fill = "#00ff00"; }
 function isActiveABR_MC_ABUS(){ return SOL6502.ABR_MC_ABUS.active; }
+function isActiveConsole(){ return SOL6502.consoleActive; }
 function isActiveDBB_MC_DBUS(){ return SOL6502.DBB_MC_DBUS.active; }
 function isActiveMC_MEM_ABUS(){ return SOL6502.MC_MEM_ABUS.active; }
 function isActiveMC_MEM_DBUS(){ return SOL6502.MC_MEM_DBUS.active; }
@@ -2272,6 +2288,7 @@ function setPC(addr){ SOL6502.PC.set(addr); }
 function setSP(byte){ SOL6502.SP.set(byte); }
 function setX(byte){ SOL6502.X.set(byte); }
 function setY(byte){ SOL6502.Y.set(byte); }
+function writeConsole(buf){ SOL6502.writeConsole(UTF8ToString(buf)); }
 
 
 
@@ -5447,16 +5464,23 @@ var asmLibraryArg = {
   "activateMC_MEM_ABUS": activateMC_MEM_ABUS,
   "activateMC_MEM_DBUS": activateMC_MEM_DBUS,
   "atexit": _atexit,
+  "decodeEnd": decodeEnd,
+  "decodeStart": decodeStart,
   "emscripten_asm_const_int": _emscripten_asm_const_int,
   "emscripten_memcpy_big": _emscripten_memcpy_big,
   "emscripten_resize_heap": _emscripten_resize_heap,
   "emscripten_sleep": _emscripten_sleep,
+  "executeEnd": executeEnd,
+  "executeStart": executeStart,
   "exit": _exit,
   "fd_close": _fd_close,
   "fd_read": _fd_read,
   "fd_seek": _fd_seek,
   "fd_write": _fd_write,
+  "fetchEnd": fetchEnd,
+  "fetchStart": fetchStart,
   "isActiveABR_MC_ABUS": isActiveABR_MC_ABUS,
+  "isActiveConsole": isActiveConsole,
   "isActiveDBB_MC_DBUS": isActiveDBB_MC_DBUS,
   "isActiveMC_MEM_ABUS": isActiveMC_MEM_ABUS,
   "isActiveMC_MEM_DBUS": isActiveMC_MEM_DBUS,
@@ -5476,7 +5500,8 @@ var asmLibraryArg = {
   "setSP": setSP,
   "setTempRet0": _setTempRet0,
   "setX": setX,
-  "setY": setY
+  "setY": setY,
+  "writeConsole": writeConsole
 };
 Asyncify.instrumentWasmImports(asmLibraryArg);
 var asm = createWasm();

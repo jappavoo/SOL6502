@@ -682,7 +682,7 @@
      sodipodi:nodetypes="cc" />
   <circle
      style="display:inline;fill:#ff0000;fill-opacity:1;stroke:#ff0000;stroke-width:1.983;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     id="LoopSprite"
+     id="loopCircle"
      cx="1004.9406"
      cy="237.838"
      r="9.0083704"
@@ -1705,10 +1705,10 @@
 </svg>
 
 <p>
-<button onclick="SOL6502.step()">step</button>
-<button onclick="SOL6502.run()">run</button>
-<button onclick="SOL6502.halt()">halt</button>
-<button onclick="SOL6502.reset()">reset</button>
+<button onclick="SOL6502.step()" id="stepButton">step</button>
+<button onclick="SOL6502.run()" id="runButton">run</button>
+<button onclick="SOL6502.halt()" id="haltButton">halt</button>
+<button onclick="SOL6502.reset()" id="resetButton">reset</button>
 </p>
 <h2>SOL6502 ASCII CONSOLE DEVICE</h2>
 <div id="console"></div>
