@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}], "remote_package_size": 262291, "package_uuid": "5aa1d782-254b-4f1e-8445-d0dd67c71720"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "7cb590ba-7e95-4baa-9bbd-a72235ccc1a4"});
   
   })();
   
@@ -492,7 +492,18 @@ const SOL6502 = {
 	}
 	*/
 	this.busy = false;
-	this.consoleActive = false;
+	this.consoleActive = 0;
+	this.c_consoleDataBuf = 0;
+	this.c_consoleDataLen = 0;
+	this.console.onData((data)=> {
+	    if (this.consoleActive == 1) {
+		Module.stringToUTF8(data,
+				    this.c_consoleDataBuf,
+				    this.c_consoleDataLen)
+		this.consoleActive = 0;
+	    }
+	});
+
 	this.stepButton = document.getElementById("stepButton");
 	this.fetchCircle = document.getElementById("fetchCircle");
 	this.decodeCircle = document.getElementById("decodeCircle");
@@ -505,10 +516,17 @@ const SOL6502 = {
     },
     
     writeConsole: function(buf) {
-	this.consoleActive = true;
+	if (this.consoleActive != 0) return;
+	this.consoleActive = 2;
 	this.console.writeUtf8(buf, ()=>{
-	    this.consoleActive = false;
+	    this.consoleActive = 0;
 	});
+    },
+
+    readConsole: function() {
+	if (this.consoleActive != 0) return;
+	this.consoleData = "";
+	this.consoleActive = 1;
     },
     
     step: function() {
@@ -2302,7 +2320,7 @@ function executeStart(){ SOL6502.executeCircle.style.fill = "#00ff00"; }
 function fetchEnd(){ SOL6502.fetchCircle.style.fill = "#ffffff"; }
 function fetchStart(){ SOL6502.fetchCircle.style.fill = "#00ff00"; }
 function isActiveABR_MC_ABUS(){ return SOL6502.ABR_MC_ABUS.active; }
-function isActiveConsole(){ return SOL6502.consoleActive; }
+function isActiveConsole(){ return (SOL6502.consoleActive != 0); }
 function isActiveDBB_MC_DBUS(){ return SOL6502.DBB_MC_DBUS.active; }
 function isActiveDC_EX_BUS(){ return SOL6502.DC_EX_BUS.active; }
 function isActiveEX_FH_BUS(){ return SOL6502.EX_FH_BUS.active; }
@@ -2314,19 +2332,20 @@ function isActiveMC_MEM_DBUS(){ return SOL6502.MC_MEM_DBUS.active; }
 function isActiveMC_OUT_ABUS(){ return SOL6502.MC_OUT_ABUS.active; }
 function isActiveMC_OUT_DBUS(){ return SOL6502.MC_OUT_DBUS.active; }
 function mainDone(){ SOL6502.mainDone(); }
+function readConsole(){ SOL6502.readConsole(); }
 function resetINLocFill(delay){ SOL6502.inputLoc.resetFill(delay); }
 function resetMEMLocFill(i,delay){ SOL6502.memLocs[i].resetFill(delay); }
 function resetOUTLocFill(delay){ SOL6502.outputLoc.resetFill(delay); }
 function setABR(addr){ SOL6502.ABR.set(addr); }
 function setAC(byte){ SOL6502.AC.set(byte); }
 function setADDRMODEInfo(text){ SOL6502.ADDRMODEINFO.set(UTF8ToString(text)); }
-function setCmdPtr(ptr){ SOL6502.c_ui_cmd_ptr = ptr; }
 function setDBB(byte){ SOL6502.DBB.set(byte); }
 function setINLoc(addr,value){ SOL6502.inputLoc.set(UTF8ToString(addr),UTF8ToString(value)); }
 function setINLocAddr(addr){ SOL6502.inputLoc.setAddr(UTF8ToString(addr)); }
 function setINLocFill(ac,vc,rc){ SOL6502.inputLoc.setFill(UTF8ToString(ac),UTF8ToString(vc), UTF8ToString(rc)); }
 function setINLocValue(value){ SOL6502.inputLoc.setValue(UTF8ToString(value)); }
 function setIR(byte){ SOL6502.IR.set(byte); }
+function setInitialJSInfo(ptr,conbuf,conbuflen){ SOL6502.c_ui_cmd_ptr = ptr; SOL6502.c_consoleDataBuf = conbuf; SOL6502.c_consoleDataLen = conbuflen; }
 function setMEMLoc(i,addr,value){ SOL6502.memLocs[i].set(UTF8ToString(addr),UTF8ToString(value)); }
 function setMEMLocFill(i,ac,vc,rc){ SOL6502.memLocs[i].setFill(UTF8ToString(ac),UTF8ToString(vc), UTF8ToString(rc)); }
 function setMEMLocValue(i,value){ SOL6502.memLocs[i].setValue(UTF8ToString(value)); }
@@ -5521,19 +5540,20 @@ var asmLibraryArg = {
   "isActiveMC_OUT_ABUS": isActiveMC_OUT_ABUS,
   "isActiveMC_OUT_DBUS": isActiveMC_OUT_DBUS,
   "mainDone": mainDone,
+  "readConsole": readConsole,
   "resetINLocFill": resetINLocFill,
   "resetMEMLocFill": resetMEMLocFill,
   "resetOUTLocFill": resetOUTLocFill,
   "setABR": setABR,
   "setAC": setAC,
   "setADDRMODEInfo": setADDRMODEInfo,
-  "setCmdPtr": setCmdPtr,
   "setDBB": setDBB,
   "setINLoc": setINLoc,
   "setINLocAddr": setINLocAddr,
   "setINLocFill": setINLocFill,
   "setINLocValue": setINLocValue,
   "setIR": setIR,
+  "setInitialJSInfo": setInitialJSInfo,
   "setMEMLoc": setMEMLoc,
   "setMEMLocFill": setMEMLocFill,
   "setMEMLocValue": setMEMLocValue,
@@ -5674,7 +5694,7 @@ if (!Object.getOwnPropertyDescriptor(Module, "allocate")) Module["allocate"] = f
 if (!Object.getOwnPropertyDescriptor(Module, "UTF8ArrayToString")) Module["UTF8ArrayToString"] = function() { abort("'UTF8ArrayToString' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "UTF8ToString")) Module["UTF8ToString"] = function() { abort("'UTF8ToString' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "stringToUTF8Array")) Module["stringToUTF8Array"] = function() { abort("'stringToUTF8Array' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
-if (!Object.getOwnPropertyDescriptor(Module, "stringToUTF8")) Module["stringToUTF8"] = function() { abort("'stringToUTF8' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+Module["stringToUTF8"] = stringToUTF8;
 if (!Object.getOwnPropertyDescriptor(Module, "lengthBytesUTF8")) Module["lengthBytesUTF8"] = function() { abort("'lengthBytesUTF8' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "stackTrace")) Module["stackTrace"] = function() { abort("'stackTrace' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "addOnPreRun")) Module["addOnPreRun"] = function() { abort("'addOnPreRun' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
