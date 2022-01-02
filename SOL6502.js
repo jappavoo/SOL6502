@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}], "remote_package_size": 262291, "package_uuid": "ec3afe5f-820c-43fd-959a-defe9d4ace12"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}], "remote_package_size": 262291, "package_uuid": "5aa1d782-254b-4f1e-8445-d0dd67c71720"});
   
   })();
   
@@ -252,6 +252,9 @@ class MemoryLoc {
 	this.valueLabel.textContent = v;
     }
 
+    setAddr(v) {
+	this.addrLabel.textContent = v;
+    }
     setFill(afill, vfill, rfill) {
 	this.addrLabel.style.fill = afill;
 	this.valueLabel.style.fill = vfill;
@@ -416,8 +419,9 @@ class Bus {
 
 const SOL6502 = {
     
-    mainRun: function() {
-	// console.log('mainRun');
+    mainDone: function(ptr) {
+//	this.c_ui_cmd_ptr = ptr;
+//	console.log('mainDone');
     },
     
     init: function() {
@@ -454,11 +458,24 @@ const SOL6502 = {
 					    document.getElementById('MEM'+i+'ValueText'),
 					    document.getElementById('MEM'+i+'Rect'));
 	}
-	
+
+	this.outputLoc = new MemoryLoc(document.getElementById('OUTPUTAddrText'),
+				       document.getElementById('OUTPUTValueText'),
+				       document.getElementById('OUTPUTRect'));
+
+	this.inputLoc = new MemoryLoc(document.getElementById('INPUTAddrText'),
+				       document.getElementById('INPUTValueText'),
+				       document.getElementById('INPUTRect'));
+
         this.ABR_MC_ABUS = new Bus('ABR-MC-ABUS','ABV');
 	this.MC_MEM_ABUS = new Bus('MC-MEM-ABUS','ABV');
 	this.DBB_MC_DBUS = new Bus('DBB-MC-DBUS', 'DBV');
 	this.MC_MEM_DBUS = new Bus('MC-MEM-DBUS','DBV');
+	this.MC_OUT_ABUS = new Bus('MC-OUTPUT-ABUS', 'ABV');
+	this.MC_OUT_DBUS = new Bus('MC-OUTPUT-DBUS', 'DBV');
+	this.MC_IN_ABUS = new Bus('MC-INPUT-ABUS', 'ABV');
+	this.MC_IN_DBUS = new Bus('MC-INPUT-DBUS', 'DBV');
+	
         this.console = new Terminal({
 	    cols: 72,
 	    rows:22,
@@ -481,16 +498,10 @@ const SOL6502 = {
 	this.decodeCircle = document.getElementById("decodeCircle");
 	this.executeCircle = document.getElementById("executeCircle");
 	this.loopCircle = document.getElementById("loopCircle");
-	this.loopCircle.style.opacity = 0;
+	this.loopCircle.style.opacity = 0; // hide loopCircle
 	this.FH_DC_BUS = new Bus('fetch-decode-bus','loopCircle');
 	this.DC_EX_BUS = new Bus('decode-execute-bus','loopCircle');
 	this.EX_FH_BUS = new Bus('execute-fetch-bus','loopCircle');
-//	this.hideLoopCircle();
-	// Use these to animate the loop stage tansitions
-//	this.FH_DC_BUS.activate(1);
-//	this.DC_EX_BUS.activate(1);
-//	this.EX_FH_BUS.activate(-1);
-
     },
     
     writeConsole: function(buf) {
@@ -522,6 +533,12 @@ const SOL6502 = {
 				  'number',
 				  ['number'],
 				 [1]);
+    },
+
+    halt: function() {
+	var state = Module.getValue(this.c_ui_cmd_ptr, "i32");
+	console.log("halt: " + state);
+	Module.setValue(this.c_ui_cmd_ptr, 1);
     }
 };
 
@@ -2265,15 +2282,19 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  16504: function() {SOL6502.mainRun()}
+  
 };
 function activateABR_MC_ABUS(dir){ SOL6502.ABR_MC_ABUS.activate(dir); }
 function activateDBB_MC_DBUS(dir){ SOL6502.DBB_MC_DBUS.activate(dir); }
 function activateDC_EX_BUS(){ SOL6502.DC_EX_BUS.activate(1, true); }
 function activateEX_FH_BUS(){ SOL6502.EX_FH_BUS.activate(-1, true); }
 function activateFH_DC_BUS(){ SOL6502.FH_DC_BUS.activate(1, true); }
+function activateMC_IN_ABUS(dir){ SOL6502.MC_IN_ABUS.activate(dir); }
+function activateMC_IN_DBUS(dir){ SOL6502.MC_IN_DBUS.activate(dir); }
 function activateMC_MEM_ABUS(dir){ SOL6502.MC_MEM_ABUS.activate(dir); }
 function activateMC_MEM_DBUS(dir){ SOL6502.MC_MEM_DBUS.activate(dir); }
+function activateMC_OUT_ABUS(dir){ SOL6502.MC_OUT_ABUS.activate(dir); }
+function activateMC_OUT_DBUS(dir){ SOL6502.MC_OUT_DBUS.activate(dir); }
 function decodeEnd(){ SOL6502.decodeCircle.style.fill = "#ffffff"; }
 function decodeStart(){ SOL6502.decodeCircle.style.fill = "#00ff00"; }
 function executeEnd(){ SOL6502.executeCircle.style.fill = "#ffffff"; SOL6502.ADDRMODEINFO.set(""); SOL6502.OPCODEINFO.set(""); }
@@ -2286,19 +2307,34 @@ function isActiveDBB_MC_DBUS(){ return SOL6502.DBB_MC_DBUS.active; }
 function isActiveDC_EX_BUS(){ return SOL6502.DC_EX_BUS.active; }
 function isActiveEX_FH_BUS(){ return SOL6502.EX_FH_BUS.active; }
 function isActiveFH_DC_BUS(){ return SOL6502.FH_DC_BUS.active; }
+function isActiveMC_IN_ABUS(){ return SOL6502.MC_IN_ABUS.active; }
+function isActiveMC_IN_DBUS(){ return SOL6502.MC_IN_DBUS.active; }
 function isActiveMC_MEM_ABUS(){ return SOL6502.MC_MEM_ABUS.active; }
 function isActiveMC_MEM_DBUS(){ return SOL6502.MC_MEM_DBUS.active; }
+function isActiveMC_OUT_ABUS(){ return SOL6502.MC_OUT_ABUS.active; }
+function isActiveMC_OUT_DBUS(){ return SOL6502.MC_OUT_DBUS.active; }
+function mainDone(){ SOL6502.mainDone(); }
+function resetINLocFill(delay){ SOL6502.inputLoc.resetFill(delay); }
 function resetMEMLocFill(i,delay){ SOL6502.memLocs[i].resetFill(delay); }
+function resetOUTLocFill(delay){ SOL6502.outputLoc.resetFill(delay); }
 function setABR(addr){ SOL6502.ABR.set(addr); }
 function setAC(byte){ SOL6502.AC.set(byte); }
 function setADDRMODEInfo(text){ SOL6502.ADDRMODEINFO.set(UTF8ToString(text)); }
+function setCmdPtr(ptr){ SOL6502.c_ui_cmd_ptr = ptr; }
 function setDBB(byte){ SOL6502.DBB.set(byte); }
+function setINLoc(addr,value){ SOL6502.inputLoc.set(UTF8ToString(addr),UTF8ToString(value)); }
+function setINLocAddr(addr){ SOL6502.inputLoc.setAddr(UTF8ToString(addr)); }
+function setINLocFill(ac,vc,rc){ SOL6502.inputLoc.setFill(UTF8ToString(ac),UTF8ToString(vc), UTF8ToString(rc)); }
+function setINLocValue(value){ SOL6502.inputLoc.setValue(UTF8ToString(value)); }
 function setIR(byte){ SOL6502.IR.set(byte); }
 function setMEMLoc(i,addr,value){ SOL6502.memLocs[i].set(UTF8ToString(addr),UTF8ToString(value)); }
 function setMEMLocFill(i,ac,vc,rc){ SOL6502.memLocs[i].setFill(UTF8ToString(ac),UTF8ToString(vc), UTF8ToString(rc)); }
 function setMEMLocValue(i,value){ SOL6502.memLocs[i].setValue(UTF8ToString(value)); }
 function setMEMScoll(u){ SOL6502.memScroll.move(u); }
 function setOPCODEInfo(text){ SOL6502.OPCODEINFO.set(UTF8ToString(text)); }
+function setOUTLocAddr(addr){ SOL6502.outputLoc.setAddr(UTF8ToString(addr)); }
+function setOUTLocFill(ac,vc,rc){ SOL6502.outputLoc.setFill(UTF8ToString(ac),UTF8ToString(vc), UTF8ToString(rc)); }
+function setOUTLocValue(value){ SOL6502.outputLoc.setValue(UTF8ToString(value)); }
 function setP(byte){ SOL6502.P.set(byte); }
 function setPC(addr){ SOL6502.PC.set(addr); }
 function setSP(byte){ SOL6502.SP.set(byte); }
@@ -4822,35 +4858,6 @@ function writeConsole(buf){ SOL6502.writeConsole(UTF8ToString(buf)); }
   function _atexit(func, arg) {
     }
 
-  var readAsmConstArgsArray = [];
-  function readAsmConstArgs(sigPtr, buf) {
-      ;
-      // Nobody should have mutated _readAsmConstArgsArray underneath us to be something else than an array.
-      assert(Array.isArray(readAsmConstArgsArray));
-      // The input buffer is allocated on the stack, so it must be stack-aligned.
-      assert(buf % 16 == 0);
-      readAsmConstArgsArray.length = 0;
-      var ch;
-      // Most arguments are i32s, so shift the buffer pointer so it is a plain
-      // index into HEAP32.
-      buf >>= 2;
-      while (ch = HEAPU8[sigPtr++]) {
-        assert(ch === 100/*'d'*/ || ch === 102/*'f'*/ || ch === 105 /*'i'*/);
-        // A double takes two 32-bit slots, and must also be aligned - the backend
-        // will emit padding to avoid that.
-        var readAsmConstArgsDouble = ch < 105;
-        if (readAsmConstArgsDouble && (buf & 1)) buf++;
-        readAsmConstArgsArray.push(readAsmConstArgsDouble ? HEAPF64[buf++ >> 1] : HEAP32[buf]);
-        ++buf;
-      }
-      return readAsmConstArgsArray;
-    }
-  function _emscripten_asm_const_int(code, sigPtr, argbuf) {
-      var args = readAsmConstArgs(sigPtr, argbuf);
-      if (!ASM_CONSTS.hasOwnProperty(code)) abort('No EM_ASM constant found at address ' + code);
-      return ASM_CONSTS[code].apply(null, args);
-    }
-
   function _emscripten_memcpy_big(dest, src, num) {
       HEAPU8.copyWithin(dest, src, src + num);
     }
@@ -5480,12 +5487,15 @@ var asmLibraryArg = {
   "activateDC_EX_BUS": activateDC_EX_BUS,
   "activateEX_FH_BUS": activateEX_FH_BUS,
   "activateFH_DC_BUS": activateFH_DC_BUS,
+  "activateMC_IN_ABUS": activateMC_IN_ABUS,
+  "activateMC_IN_DBUS": activateMC_IN_DBUS,
   "activateMC_MEM_ABUS": activateMC_MEM_ABUS,
   "activateMC_MEM_DBUS": activateMC_MEM_DBUS,
+  "activateMC_OUT_ABUS": activateMC_OUT_ABUS,
+  "activateMC_OUT_DBUS": activateMC_OUT_DBUS,
   "atexit": _atexit,
   "decodeEnd": decodeEnd,
   "decodeStart": decodeStart,
-  "emscripten_asm_const_int": _emscripten_asm_const_int,
   "emscripten_memcpy_big": _emscripten_memcpy_big,
   "emscripten_resize_heap": _emscripten_resize_heap,
   "emscripten_sleep": _emscripten_sleep,
@@ -5504,19 +5514,34 @@ var asmLibraryArg = {
   "isActiveDC_EX_BUS": isActiveDC_EX_BUS,
   "isActiveEX_FH_BUS": isActiveEX_FH_BUS,
   "isActiveFH_DC_BUS": isActiveFH_DC_BUS,
+  "isActiveMC_IN_ABUS": isActiveMC_IN_ABUS,
+  "isActiveMC_IN_DBUS": isActiveMC_IN_DBUS,
   "isActiveMC_MEM_ABUS": isActiveMC_MEM_ABUS,
   "isActiveMC_MEM_DBUS": isActiveMC_MEM_DBUS,
+  "isActiveMC_OUT_ABUS": isActiveMC_OUT_ABUS,
+  "isActiveMC_OUT_DBUS": isActiveMC_OUT_DBUS,
+  "mainDone": mainDone,
+  "resetINLocFill": resetINLocFill,
   "resetMEMLocFill": resetMEMLocFill,
+  "resetOUTLocFill": resetOUTLocFill,
   "setABR": setABR,
   "setAC": setAC,
   "setADDRMODEInfo": setADDRMODEInfo,
+  "setCmdPtr": setCmdPtr,
   "setDBB": setDBB,
+  "setINLoc": setINLoc,
+  "setINLocAddr": setINLocAddr,
+  "setINLocFill": setINLocFill,
+  "setINLocValue": setINLocValue,
   "setIR": setIR,
   "setMEMLoc": setMEMLoc,
   "setMEMLocFill": setMEMLocFill,
   "setMEMLocValue": setMEMLocValue,
   "setMEMScoll": setMEMScoll,
   "setOPCODEInfo": setOPCODEInfo,
+  "setOUTLocAddr": setOUTLocAddr,
+  "setOUTLocFill": setOUTLocFill,
+  "setOUTLocValue": setOUTLocValue,
   "setP": setP,
   "setPC": setPC,
   "setSP": setSP,
@@ -5643,8 +5668,8 @@ if (!Object.getOwnPropertyDescriptor(Module, "intArrayFromString")) Module["intA
 if (!Object.getOwnPropertyDescriptor(Module, "intArrayToString")) Module["intArrayToString"] = function() { abort("'intArrayToString' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 Module["ccall"] = ccall;
 Module["cwrap"] = cwrap;
-if (!Object.getOwnPropertyDescriptor(Module, "setValue")) Module["setValue"] = function() { abort("'setValue' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
-if (!Object.getOwnPropertyDescriptor(Module, "getValue")) Module["getValue"] = function() { abort("'getValue' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+Module["setValue"] = setValue;
+Module["getValue"] = getValue;
 if (!Object.getOwnPropertyDescriptor(Module, "allocate")) Module["allocate"] = function() { abort("'allocate' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "UTF8ArrayToString")) Module["UTF8ArrayToString"] = function() { abort("'UTF8ArrayToString' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "UTF8ToString")) Module["UTF8ToString"] = function() { abort("'UTF8ToString' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
