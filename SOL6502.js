@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "7cb590ba-7e95-4baa-9bbd-a72235ccc1a4"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "d5d1b9e3-a174-4241-836d-5aec8d15e6bc"});
   
   })();
   
@@ -482,6 +482,8 @@ const SOL6502 = {
 	    theme:{ background: '#000000', foreground:'#00ff00' }
 	});
         this.console.open(document.getElementById('console'));
+	this.consoleStatusMsg = document.getElementById('ConsoleStatusText')
+	this.consoleStatusMsg.textContent = "";
 	/*
 	for (let i=0; i<this.console.cols; i++) {
 	    this.console.write('' + i%10);
@@ -500,6 +502,7 @@ const SOL6502 = {
 		Module.stringToUTF8(data,
 				    this.c_consoleDataBuf,
 				    this.c_consoleDataLen)
+		this.consoleStatusMsg.textContent = ""
 		this.consoleActive = 0;
 	    }
 	});
@@ -518,7 +521,9 @@ const SOL6502 = {
     writeConsole: function(buf) {
 	if (this.consoleActive != 0) return;
 	this.consoleActive = 2;
+	this.consoleStatusMsg.textContent = ""
 	this.console.writeUtf8(buf, ()=>{
+	    this.consoleStatusMsg.textContent = ""
 	    this.consoleActive = 0;
 	});
     },
@@ -527,6 +532,7 @@ const SOL6502 = {
 	if (this.consoleActive != 0) return;
 	this.consoleData = "";
 	this.consoleActive = 1;
+	this.consoleStatusMsg.textContent = "WAITING FOR INPUT: Press Key in terminal below...";
     },
     
     step: function() {
