@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}], "remote_package_size": 262291, "package_uuid": "66597571-7c04-4b8e-98cb-bd9c99563004"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}], "remote_package_size": 262291, "package_uuid": "ec3afe5f-820c-43fd-959a-defe9d4ace12"});
   
   })();
   
@@ -397,11 +397,17 @@ class Bus {
 	this.anim = new SpriteAnimation(pathid, spriteid);
     }
 
-    activate(dir) {
+    activate(dir,hidden=false) {
 	if (AnimationSpeed > 0) {
 //	    console.log("dir: " + dir);
 	    this.active = true;
+	    if (hidden) {
+		this.anim.sprite.sprite.style.opacity=1;
+	    }
 	    this.anim.start(dir,()=>{
+		if (hidden) {
+		    this.anim.sprite.sprite.style.opacity=0;
+		}
 		this.active = false;
 	    })
 	} 
@@ -475,12 +481,16 @@ const SOL6502 = {
 	this.decodeCircle = document.getElementById("decodeCircle");
 	this.executeCircle = document.getElementById("executeCircle");
 	this.loopCircle = document.getElementById("loopCircle");
-	this.hideLoopCircle();
-    },
-
-    hideLoopCircle: function() {
 	this.loopCircle.style.opacity = 0;
-//	this.loopCircle.style.stroke-opacity = 0; 
+	this.FH_DC_BUS = new Bus('fetch-decode-bus','loopCircle');
+	this.DC_EX_BUS = new Bus('decode-execute-bus','loopCircle');
+	this.EX_FH_BUS = new Bus('execute-fetch-bus','loopCircle');
+//	this.hideLoopCircle();
+	// Use these to animate the loop stage tansitions
+//	this.FH_DC_BUS.activate(1);
+//	this.DC_EX_BUS.activate(1);
+//	this.EX_FH_BUS.activate(-1);
+
     },
     
     writeConsole: function(buf) {
@@ -2255,10 +2265,13 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  16233: function() {SOL6502.mainRun()}
+  16504: function() {SOL6502.mainRun()}
 };
 function activateABR_MC_ABUS(dir){ SOL6502.ABR_MC_ABUS.activate(dir); }
 function activateDBB_MC_DBUS(dir){ SOL6502.DBB_MC_DBUS.activate(dir); }
+function activateDC_EX_BUS(){ SOL6502.DC_EX_BUS.activate(1, true); }
+function activateEX_FH_BUS(){ SOL6502.EX_FH_BUS.activate(-1, true); }
+function activateFH_DC_BUS(){ SOL6502.FH_DC_BUS.activate(1, true); }
 function activateMC_MEM_ABUS(dir){ SOL6502.MC_MEM_ABUS.activate(dir); }
 function activateMC_MEM_DBUS(dir){ SOL6502.MC_MEM_DBUS.activate(dir); }
 function decodeEnd(){ SOL6502.decodeCircle.style.fill = "#ffffff"; }
@@ -2270,6 +2283,9 @@ function fetchStart(){ SOL6502.fetchCircle.style.fill = "#00ff00"; }
 function isActiveABR_MC_ABUS(){ return SOL6502.ABR_MC_ABUS.active; }
 function isActiveConsole(){ return SOL6502.consoleActive; }
 function isActiveDBB_MC_DBUS(){ return SOL6502.DBB_MC_DBUS.active; }
+function isActiveDC_EX_BUS(){ return SOL6502.DC_EX_BUS.active; }
+function isActiveEX_FH_BUS(){ return SOL6502.EX_FH_BUS.active; }
+function isActiveFH_DC_BUS(){ return SOL6502.FH_DC_BUS.active; }
 function isActiveMC_MEM_ABUS(){ return SOL6502.MC_MEM_ABUS.active; }
 function isActiveMC_MEM_DBUS(){ return SOL6502.MC_MEM_DBUS.active; }
 function resetMEMLocFill(i,delay){ SOL6502.memLocs[i].resetFill(delay); }
@@ -5461,6 +5477,9 @@ var asmLibraryArg = {
   "__syscall_open": ___syscall_open,
   "activateABR_MC_ABUS": activateABR_MC_ABUS,
   "activateDBB_MC_DBUS": activateDBB_MC_DBUS,
+  "activateDC_EX_BUS": activateDC_EX_BUS,
+  "activateEX_FH_BUS": activateEX_FH_BUS,
+  "activateFH_DC_BUS": activateFH_DC_BUS,
   "activateMC_MEM_ABUS": activateMC_MEM_ABUS,
   "activateMC_MEM_DBUS": activateMC_MEM_DBUS,
   "atexit": _atexit,
@@ -5482,6 +5501,9 @@ var asmLibraryArg = {
   "isActiveABR_MC_ABUS": isActiveABR_MC_ABUS,
   "isActiveConsole": isActiveConsole,
   "isActiveDBB_MC_DBUS": isActiveDBB_MC_DBUS,
+  "isActiveDC_EX_BUS": isActiveDC_EX_BUS,
+  "isActiveEX_FH_BUS": isActiveEX_FH_BUS,
+  "isActiveFH_DC_BUS": isActiveFH_DC_BUS,
   "isActiveMC_MEM_ABUS": isActiveMC_MEM_ABUS,
   "isActiveMC_MEM_DBUS": isActiveMC_MEM_DBUS,
   "resetMEMLocFill": resetMEMLocFill,
