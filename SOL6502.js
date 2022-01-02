@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "d5d1b9e3-a174-4241-836d-5aec8d15e6bc"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "f6c71792-324e-4b4e-b13d-30076e0abe71"});
   
   })();
   
@@ -421,7 +421,8 @@ const SOL6502 = {
     
     mainDone: function(ptr) {
 //	this.c_ui_cmd_ptr = ptr;
-//	console.log('mainDone');
+	//	console.log('mainDone');
+	this.stepButton.disabled = false;
     },
     
     init: function() {
