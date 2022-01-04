@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "f391c234-8be9-44c0-9767-17ac3048d01b"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "954d406e-6cd9-40bd-86a8-1fc7bfed429b"});
   
   })();
   
@@ -214,6 +214,7 @@ Module['FS_createPath']("/", "misc", true, true);
     if (Module['ENVIRONMENT_IS_PTHREAD']) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
   var AnimationSpeed = 1000;
+
 
 class Info {
   label;
@@ -553,7 +554,7 @@ const SOL6502 = {
 	this.busy = true;
 	this.disableButtons();
 	Module.ccall('c_step', // name of C function
-		     null, // return type
+		     'number', // return type
 		     [], // argument types
 		     [], // arguments
 		     {async: true}).then(result => {
@@ -580,6 +581,7 @@ const SOL6502 = {
 //	console.log("c_halt: done");
 	this.busy = false;
 	Module.setValue(this.c_ui_event_ptr, 0);
+	this.haltButton.disabled = true;
 	this.enableButtons();
     },
     
@@ -596,6 +598,39 @@ const SOL6502 = {
 //				  {async: true}).then(result => {
 	//			  });
 	
+    },
+    // from https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/File_drag_and_drop
+    dragOverHandler: function(ev) {
+	//  console.log('File(s) in drop zone');
+	// Prevent default behavior (Prevent file from being opened)
+	ev.preventDefault();
+    },
+    dropHandler: function (ev) {
+	console.log('File(s) dropped');
+	
+	// Prevent default behavior (Prevent file from being opened)
+	ev.preventDefault();
+	var file;
+	if (ev.dataTransfer.items) {
+	    // Use DataTransferItemList interface to access the file(s)
+	    // we only pay attention to the first file and if it is a file
+	    if (ev.dataTransfer.items.length>0 && ev.dataTransfer.items[0].kind === 'file') {
+		file = ev.dataTransfer.items[0].getAsFile();
+	    }
+	} else {
+	    // Use DataTransfer interface to access the file(s)
+	    if ( ev.dataTransfer.files.length > 0) {
+		file = ev.dataTransfer.files[0];
+	    }
+	} 
+	console.log('... file.name = ' + file.name + " 2**16= " + 2**16 + ' size: ' + file.size);
+	if (file.size != 2**16) {
+	    alert("Memory file must be " + 2**16 + " bytes ... file: " + file.name + "size: " + file.size);
+	} else {
+	    file.arrayBuffer().then(buffer => {
+		console.log("buffer loaded..." +  buffer.byteLength);
+	    });
+	}
     }
 };
 
