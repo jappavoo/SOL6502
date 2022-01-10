@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "954d406e-6cd9-40bd-86a8-1fc7bfed429b"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "c411feec-88c1-4a73-a148-7cc68a2ffab8"});
   
   })();
   
@@ -238,6 +238,10 @@ class MemoryLoc {
     constructor(alabel, vlabel, r) {
 	this.addrLabel  = alabel;
 	this.valueLabel = vlabel;
+	this.valueLabel.onclick = function () {
+	    let newValue = prompt(alabel.textContent, vlabel.textContent);
+	    console.log("NYI: " + alabel.textContent + " <- " + newValue);
+	}
 	this.rect       = r;
 	this.afill = this.addrLabel.style.fill;
 	this.afill = this.valueLabel.style.fill;
@@ -275,12 +279,17 @@ class Register {
     value = 0;
     bits = 8;
     label;
+    name;
     buses = [];
     
-    constructor(bits, v, label) {
+    constructor(bits, v, label, name) {
 	this.bits = bits;
 	this.value = v & ((1<<bits)-1);
 	this.label = label;
+	this.label.onclick = function () {
+	    let newValue = prompt(name, label.textContent);
+	    console.log("NYI: " + name + " <- " + newValue)
+	}
     }
     
     valueToString() {
@@ -327,10 +336,13 @@ class Sprite {
 	this.sprite.style.fill = color;
     }
     // Initialize the dot: connect sprite and track properties with supplied SVG elements
-    constructor(pathid, spriteid) {
+    constructor(pathid, spriteid, drag=null) {
 //	console.log("pathid: " + pathid + " spriteid: " + spriteid); 
 	this.path = document.getElementById(pathid);
         this.sprite = document.getElementById(spriteid);
+	if (drag != null) {
+	    this.sprite.addEventListener('mousedown', drag);
+	}
 //	this.logpos();
 //	this.pathColor('yellow');
 //	this.spriteFillColor('red');
@@ -427,29 +439,31 @@ const SOL6502 = {
     
     init: function() {
 	this.ABR = new Register(16, 0x0000,
-				document.getElementById('ABRValueText'));
+				document.getElementById('ABRValueText'), "ABR");
 	this.DBB = new Register(8, 0x00,
-				document.getElementById('DBBValueText'));
+				document.getElementById('DBBValueText'), "DBB");
 	this.IR = new Register(8, 0x00,
-			       document.getElementById('IRValueText'));
+			       document.getElementById('IRValueText'), "IR");
 	this.PC = new Register(16, 0x0000,
-			       document.getElementById('PCValueText'));
+			       document.getElementById('PCValueText'), "PC");
 	this.AC = new Register(8, 0x00,
-			       document.getElementById('ACValueText'));
+			       document.getElementById('ACValueText'), "A");
 	this.X = new Register(8, 0x00,
-			       document.getElementById('XValueText'));
+			      document.getElementById('XValueText'), "X");
 	this.Y = new Register(8, 0x00,
-			       document.getElementById('YValueText'));
+			      document.getElementById('YValueText'), "Y");
 	this.P = new Register(8, 0x00,
-			       document.getElementById('PValueText'));
+			      document.getElementById('PValueText'), "P");
 	this.SP = new Register(8, 0x00,
-			       document.getElementById('SPValueText'));
+			       document.getElementById('SPValueText'), "SP");
 
 	
 	this.ADDRMODEINFO = new Info(document.getElementById('ADDRMODEInfoText'));
 	this.OPCODEINFO = new Info(document.getElementById('OPCODEInfoText'));
 
-	this.memScroll = new Sprite('memScroll','memCircle');
+	this.memScroll = new Sprite('memScroll','memCircle', ()=>{
+	    alert("memscroll");
+	});
 	
 	this.memLocs = [];
 

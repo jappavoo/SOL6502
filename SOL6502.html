@@ -448,7 +448,7 @@
        sodipodi:role="line"
        id="YValueText"
        x="349.93698"
-       y="213.22606">Y0000000</tspan></text>
+       y="213.22606"></tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
@@ -1710,7 +1710,14 @@
 <button onclick="SOL6502.run()" id="runButton" disabled>run</button>
 <button title="halt when current instruction is done" onclick="SOL6502.halt()" id="haltButton" disabled>halt</button>
 <button onclick="SOL6502.reset()" id="resetButton" disabled>reset</button>
+<label for="img">Load img:</label>
+  <select name="img" id="imgSelect" disabled>
+  </select>
+<label for="curImg">Current Memory Image: </label><label name="curImg" id="curImgText">hello.img</label>
+<label for="speed">Speed:</label>
+<input name="speed "type="range" min="1" max="100" value="50" class="slider" id="speedSetting" disabled>
 </p>
+
 <h2>SOL6502 ASCII CONSOLE TERMINAL:  device address 1111111100000000</h2>
 <h2 style="background-color:yellow; color:red" id="ConsoleStatusText">Status:</h2>
 <div id="console">
