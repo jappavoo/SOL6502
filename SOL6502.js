@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "809da088-fb3b-4def-993d-1d345a5de289"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "751b15dc-c094-4556-acbc-2c650dabb321"});
   
   })();
   
@@ -213,8 +213,9 @@ Module['FS_createPath']("/", "misc", true, true);
     // it.
     if (Module['ENVIRONMENT_IS_PTHREAD']) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  var AnimationSpeed = 1000;
-
+  //var AnimationSpeed = 0.1;
+var AnimationSpeed = 1;
+var AnimationMaxSpeed = 10;
 
 class Info {
   label;
@@ -343,17 +344,36 @@ class Sprite {
     spriteFillColor(color) {
 	this.sprite.style.fill = color;
     }
+
+    pathClick(ev) {
+	var ymin = this.path.getPointAtLength(0.0).y;
+	var ymax = this.path.getPointAtLength(this.path.getTotalLength()).y;
+	var ylen = ymax - ymin;
+	var ya = ev.clientY-ymin;
+	var u = ya/ylen;
+//	console.log("pathClick: cx:" + ev.clientX + " cy:" + ev.clientY + " sx:" + ev.screenX + " sy:" + ev.screenY +
+//		    " px: " + ev.pageX + " py:" + ev.pageY + " ya: " + ya +  " yl:" +  this.ylen + " u:"+ ya/this.ylen);
+	//	this.logpos();
+	this.pathclick(u);
+    }
     
     // Initialize the dot: connect sprite and track properties with supplied SVG elements
-    constructor(pathid, spriteid, drag=null, onclick=null) {
+    constructor(pathid, spriteid, drag=null, onclick=null, pathclick=null) {
 //	console.log("pathid: " + pathid + " spriteid: " + spriteid); 
 	this.path = document.getElementById(pathid);
+
+	
         this.sprite = document.getElementById(spriteid);
 	if (drag != null) {
 	    this.sprite.addEventListener('mousedown', drag);
 	}
 	if (onclick != null) {
 	    this.sprite.onclick = onclick;
+	}
+
+	if (pathclick!=null) {
+	    this.pathclick = pathclick;
+	    this.path.onclick = (ev) => { this.pathClick(ev); };
 	}
 //	this.logpos();
 //	this.pathColor('yellow');
@@ -390,7 +410,9 @@ class SpriteAnimation {
     }
     
     run(dir) {
-        let u = Math.min((Date.now() - this.tZero) / AnimationSpeed, 1);
+	let u =  ((Date.now() - this.tZero) * AnimationSpeed) / this.sprite.path.getTotalLength(); // distance gone so far
+	u = Math.min(u, 1);
+        //let u = Math.min((Date.now() - this.tZero) / AnimationSpeed, 1);
 	var finished = false;
 	
         if (u < 1) {
@@ -484,7 +506,7 @@ const SOL6502 = {
 	this.ADDRMODEINFO = new Info(document.getElementById('ADDRMODEInfoText'));
 	this.OPCODEINFO = new Info(document.getElementById('OPCODEInfoText'));
 
-	this.memScroll = new Sprite('memScroll','memCircle', null, this.gotoMem);
+	this.memScroll = new Sprite('memScroll','memCircle', null, this.gotoMem, this.gotoMemFrac);
 				    //SOL6502.memScrollStartMove);
 	
 	this.memLocs = [];
@@ -557,8 +579,35 @@ const SOL6502 = {
 	this.FH_DC_BUS = new Bus('fetch-decode-bus','loopCircle');
 	this.DC_EX_BUS = new Bus('decode-execute-bus','loopCircle');
 	this.EX_FH_BUS = new Bus('execute-fetch-bus','loopCircle');
+	this.speedSetting = document.getElementById("speedSetting");
+	this.speedSetting.value = (AnimationSpeed / AnimationMaxSpeed)*100;
+	this.speedSetting.oninput = function() {
+	    AnimationSpeed = AnimationMaxSpeed * (this.value/100);
+//	    console.log("speed: " + this.value + "AnimationSpeed: " + AnimationSpeed);
+	}
     },
 
+    gotoMemFrac: function(frac) {	
+	if (SOL6502.busy) return;
+	if (frac > 1.0) frac=1.0;
+	if (frac < 0) frac = 0.0;
+	var newValue = parseInt((2**16 - 1) * frac);
+	console.log("gotoMemFrac:" + frac + "newValue: " + newValue);
+
+	SOL6502.busy = true;
+	SOL6502.disableButtons();
+	Module.ccall('c_displayMem', // name of C function
+		     'number', // return type
+		     ['number'], // argument types
+		     [newValue], // arguments
+		     {async: true}).then(result => {
+			 SOL6502.busy = false;
+			 SOL6502.enableButtons();
+			 //			 console.log("step: done");
+		     });
+	
+    },
+    
     gotoMem: function() {
 	if (SOL6502.busy) return;
 	SOL6502.busy = true;
