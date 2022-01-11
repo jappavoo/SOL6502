@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "419d99fa-f0d6-4acf-84df-1ca7843755fa"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "e1e178f4-e513-47a2-be1f-4580554e705f"});
   
   })();
   
@@ -560,26 +560,27 @@ const SOL6502 = {
 	if (this.busy) return;
 	this.busy = true;
 	this.disableButtons();
-	let newValue = parseInt(
-	    prompt(this.memLocs[i].addrLabel.textContent,
-		   this.memLocs[i].valueLabel.textContent),
-	    this.base);
-	
-	if (!isNaN(newValue) && newValue >=0 && newValue <= 255) {
-	    Module.ccall('c_updateMem', // name of C function
-			 'number', // return type
-			 ['number', 'number', 'number'], // argument types
-			 [this.memLocs[i].addr, newValue, i], // arguments
-			 {async: true}).then(result => {
-			     this.busy = false;
-			     this.enableButtons();
-			     //			 console.log("step: done");
-		     });
-	} else {
-	    alert("Bad Value: Try again");
-	    this.busy = false;
-	    this.enableButtons();
+	let newValue = prompt(this.memLocs[i].addrLabel.textContent,
+			      this.memLocs[i].valueLabel.textContent);
+	if (newValue != null) {  // did not press cancel
+	    newValue = parseInt(newValue, this.base);
+	    if (!isNaN(newValue) && newValue >=0 && newValue <= 255) {
+		Module.ccall('c_updateMem', // name of C function
+			     'number', // return type
+			     ['number', 'number', 'number'], // argument types
+			     [this.memLocs[i].addr, newValue, i], // arguments
+			     {async: true}).then(result => {
+				 this.busy = false;
+				 this.enableButtons();
+				 //			 console.log("step: done");
+			     });
+		return;
+	    } else {
+		alert("Bad Value: Try again");
+	    }
 	}
+	this.busy = false;
+	this.enableButtons();
     },
 
     regUpdate: function(r) {
