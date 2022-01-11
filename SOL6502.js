@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "c411feec-88c1-4a73-a148-7cc68a2ffab8"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "419d99fa-f0d6-4acf-84df-1ca7843755fa"});
   
   })();
   
@@ -234,32 +234,40 @@ class MemoryLoc {
     afill;
     vfill;
     rfill;
+    idx;
+    val;
+    addr;
     
-    constructor(alabel, vlabel, r) {
+    constructor(alabel, vlabel, r, i) {
 	this.addrLabel  = alabel;
 	this.valueLabel = vlabel;
+	this.idx = i;
 	this.valueLabel.onclick = function () {
-	    let newValue = prompt(alabel.textContent, vlabel.textContent);
-	    console.log("NYI: " + alabel.textContent + " <- " + newValue);
+	    SOL6502.memUpdate(i);
 	}
-	this.rect       = r;
+	this.rect  = r;
 	this.afill = this.addrLabel.style.fill;
 	this.afill = this.valueLabel.style.fill;
 	this.rfill = this.rect.style.fill;
     }
     
-    set(a,v) {
+    set(a,v,addr, val) {
 	this.addrLabel.textContent = a;
 	this.valueLabel.textContent = v;
+	this.addr = addr;
+	this.val = val;
     }
 
-    setValue(v) {
+    setValue(v,val) {
 	this.valueLabel.textContent = v;
+	this.val = val;
     }
 
-    setAddr(v) {
+    setAddr(v,addr) {
 	this.addrLabel.textContent = v;
+	this.addr = addr;
     }
+    
     setFill(afill, vfill, rfill) {
 	this.addrLabel.style.fill = afill;
 	this.valueLabel.style.fill = vfill;
@@ -286,9 +294,9 @@ class Register {
 	this.bits = bits;
 	this.value = v & ((1<<bits)-1);
 	this.label = label;
+	this.name = name;
 	this.label.onclick = function () {
-	    let newValue = prompt(name, label.textContent);
-	    console.log("NYI: " + name + " <- " + newValue)
+	    SOL6502.regUpdate(name);
 	}
     }
     
@@ -434,29 +442,40 @@ const SOL6502 = {
     
     mainDone: function(ptr) {
 	//	console.log('mainDone');
+	this.busy = false;
 	this.enableButtons();
     },
     
     init: function() {
+	this.base = 2;
+	this.regs = [];
 	this.ABR = new Register(16, 0x0000,
 				document.getElementById('ABRValueText'), "ABR");
+	this.regs["ABR"] = this.ABR; 
 	this.DBB = new Register(8, 0x00,
-				document.getElementById('DBBValueText'), "DBB");
+				document.getElementById('DBBValueText'), "DBB");	
+	this.regs["DBB"] = this.DBB; 
 	this.IR = new Register(8, 0x00,
 			       document.getElementById('IRValueText'), "IR");
+	this.regs["IR"] = this.IR;
 	this.PC = new Register(16, 0x0000,
 			       document.getElementById('PCValueText'), "PC");
+	this.regs["PC"] = this.PC;
 	this.AC = new Register(8, 0x00,
 			       document.getElementById('ACValueText'), "A");
+	this.regs["A"] = this.AC;
 	this.X = new Register(8, 0x00,
 			      document.getElementById('XValueText'), "X");
+	this.regs["X"] = this.X;
 	this.Y = new Register(8, 0x00,
 			      document.getElementById('YValueText'), "Y");
+	this.regs["Y"] = this.Y;
 	this.P = new Register(8, 0x00,
 			      document.getElementById('PValueText'), "P");
+	this.regs["P"] = this.P;
 	this.SP = new Register(8, 0x00,
 			       document.getElementById('SPValueText'), "SP");
-
+	this.regs["SP"] = this.SP; 
 	
 	this.ADDRMODEINFO = new Info(document.getElementById('ADDRMODEInfoText'));
 	this.OPCODEINFO = new Info(document.getElementById('OPCODEInfoText'));
@@ -471,7 +490,7 @@ const SOL6502 = {
 //	    console.log("adding memory location");
 	    this.memLocs[i] = new MemoryLoc(document.getElementById('MEM'+i+'AddrText'),
 					    document.getElementById('MEM'+i+'ValueText'),
-					    document.getElementById('MEM'+i+'Rect'));
+					    document.getElementById('MEM'+i+'Rect'), i);
 	}
 
 	this.outputLoc = new MemoryLoc(document.getElementById('OUTPUTAddrText'),
@@ -508,7 +527,8 @@ const SOL6502 = {
 	    this.console.writeln("line: " + i);
 	}
 	*/
-	this.busy = false;
+	
+	this.busy = true;      // start 
 	this.consoleActive = 0;
 	this.c_consoleDataBuf = 0;
 	this.c_consoleDataLen = 0;
@@ -525,6 +545,7 @@ const SOL6502 = {
 	this.stepButton = document.getElementById("stepButton");
 	this.runButton = document.getElementById("runButton");
 	this.haltButton = document.getElementById("haltButton");
+	this.resetButton = document.getElementById("resetButton");
 	this.fetchCircle = document.getElementById("fetchCircle");
 	this.decodeCircle = document.getElementById("decodeCircle");
 	this.executeCircle = document.getElementById("executeCircle");
@@ -533,6 +554,38 @@ const SOL6502 = {
 	this.FH_DC_BUS = new Bus('fetch-decode-bus','loopCircle');
 	this.DC_EX_BUS = new Bus('decode-execute-bus','loopCircle');
 	this.EX_FH_BUS = new Bus('execute-fetch-bus','loopCircle');
+    },
+
+    memUpdate: function(i) {
+	if (this.busy) return;
+	this.busy = true;
+	this.disableButtons();
+	let newValue = parseInt(
+	    prompt(this.memLocs[i].addrLabel.textContent,
+		   this.memLocs[i].valueLabel.textContent),
+	    this.base);
+	
+	if (!isNaN(newValue) && newValue >=0 && newValue <= 255) {
+	    Module.ccall('c_updateMem', // name of C function
+			 'number', // return type
+			 ['number', 'number', 'number'], // argument types
+			 [this.memLocs[i].addr, newValue, i], // arguments
+			 {async: true}).then(result => {
+			     this.busy = false;
+			     this.enableButtons();
+			     //			 console.log("step: done");
+		     });
+	} else {
+	    alert("Bad Value: Try again");
+	    this.busy = false;
+	    this.enableButtons();
+	}
+    },
+
+    regUpdate: function(r) {
+	if (this.busy) return;
+	let newValue = prompt(this.regs[r].name,  this.regs[r].label.textContent);
+	console.log("NYI: " + this.regs[r].name + " <- " + newValue)
     },
     
     writeConsole: function(buf) {
@@ -555,11 +608,28 @@ const SOL6502 = {
     disableButtons: function() {
 	this.stepButton.disabled = true;
 	this.runButton.disabled = true;
+	this.resetButton.disabled = true;
     },
 
     enableButtons: function() {
 	this.stepButton.disabled = false;
 	this.runButton.disabled = false;
+	this.resetButton.disabled = false;
+    },
+
+    reset: function() {
+	if (this.busy) return;
+	this.busy = true;
+	this.disableButtons();
+	Module.ccall('c_reset', // name of C function
+		     null, // return type
+		     [], // argument types
+		     [], // arguments
+		     {async: true}).then(result => {
+			 this.busy = false;
+			 this.enableButtons();
+//			 console.log("step: done");
+		     });	
     },
     
     step: function() {
@@ -2435,9 +2505,9 @@ function setINLocFill(ac,vc,rc){ SOL6502.inputLoc.setFill(UTF8ToString(ac),UTF8T
 function setINLocValue(value){ SOL6502.inputLoc.setValue(UTF8ToString(value)); }
 function setIR(byte){ SOL6502.IR.set(byte); }
 function setInitialJSInfo(ptr,conbuf,conbuflen){ SOL6502.c_ui_event_ptr = ptr; SOL6502.c_consoleDataBuf = conbuf; SOL6502.c_consoleDataLen = conbuflen; }
-function setMEMLoc(i,addr,value){ SOL6502.memLocs[i].set(UTF8ToString(addr),UTF8ToString(value)); }
+function setMEMLoc(i,addr,value,a,b){ SOL6502.memLocs[i].set(UTF8ToString(addr),UTF8ToString(value), a, b); }
 function setMEMLocFill(i,ac,vc,rc){ SOL6502.memLocs[i].setFill(UTF8ToString(ac),UTF8ToString(vc), UTF8ToString(rc)); }
-function setMEMLocValue(i,value){ SOL6502.memLocs[i].setValue(UTF8ToString(value)); }
+function setMEMLocValue(i,value,b){ SOL6502.memLocs[i].setValue(UTF8ToString(value), b); }
 function setMEMScoll(u){ SOL6502.memScroll.move(u); }
 function setOPCODEInfo(text){ SOL6502.OPCODEINFO.set(UTF8ToString(text)); }
 function setOUTLocAddr(addr){ SOL6502.outputLoc.setAddr(UTF8ToString(addr)); }
@@ -6452,7 +6522,10 @@ var _c_step = Module["_c_step"] = createExportWrapper("c_step");
 var _c_run = Module["_c_run"] = createExportWrapper("c_run");
 
 /** @type {function(...*):?} */
-var _c_halt = Module["_c_halt"] = createExportWrapper("c_halt");
+var _c_updateMem = Module["_c_updateMem"] = createExportWrapper("c_updateMem");
+
+/** @type {function(...*):?} */
+var _c_reset = Module["_c_reset"] = createExportWrapper("c_reset");
 
 /** @type {function(...*):?} */
 var _fflush = Module["_fflush"] = createExportWrapper("fflush");
