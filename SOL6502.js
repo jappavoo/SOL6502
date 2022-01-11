@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "e1e178f4-e513-47a2-be1f-4580554e705f"});
+   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "809da088-fb3b-4def-993d-1d345a5de289"});
   
   })();
   
@@ -333,7 +333,7 @@ class MC {
 class Sprite {
     path  = null;
     sprite = null;
-
+    
     logpos() {
 	console.log("cur: " + this.sprite.cx.baseVal.value + " " + this.sprite.cy.baseVal.value);
     }
@@ -343,13 +343,17 @@ class Sprite {
     spriteFillColor(color) {
 	this.sprite.style.fill = color;
     }
+    
     // Initialize the dot: connect sprite and track properties with supplied SVG elements
-    constructor(pathid, spriteid, drag=null) {
+    constructor(pathid, spriteid, drag=null, onclick=null) {
 //	console.log("pathid: " + pathid + " spriteid: " + spriteid); 
 	this.path = document.getElementById(pathid);
         this.sprite = document.getElementById(spriteid);
 	if (drag != null) {
 	    this.sprite.addEventListener('mousedown', drag);
+	}
+	if (onclick != null) {
+	    this.sprite.onclick = onclick;
 	}
 //	this.logpos();
 //	this.pathColor('yellow');
@@ -480,9 +484,8 @@ const SOL6502 = {
 	this.ADDRMODEINFO = new Info(document.getElementById('ADDRMODEInfoText'));
 	this.OPCODEINFO = new Info(document.getElementById('OPCODEInfoText'));
 
-	this.memScroll = new Sprite('memScroll','memCircle', ()=>{
-	    alert("memscroll");
-	});
+	this.memScroll = new Sprite('memScroll','memCircle', null, this.gotoMem);
+				    //SOL6502.memScrollStartMove);
 	
 	this.memLocs = [];
 
@@ -556,6 +559,55 @@ const SOL6502 = {
 	this.EX_FH_BUS = new Bus('execute-fetch-bus','loopCircle');
     },
 
+    gotoMem: function() {
+	if (SOL6502.busy) return;
+	SOL6502.busy = true;
+	SOL6502.disableButtons();
+	let newValue = prompt("Enter Address display:",
+			      SOL6502.memLocs[0].addr.toString(SOL6502.base));
+	if (newValue != null) {
+	    newValue = parseInt(newValue, SOL6502.base);
+	    if (!isNaN(newValue) && newValue >=0 && newValue <= 2**16) {
+		Module.ccall('c_displayMem', // name of C function
+			     'number', // return type
+			     ['number'], // argument types
+			     [newValue], // arguments
+			     {async: true}).then(result => {
+				 SOL6502.busy = false;
+				 SOL6502.enableButtons();
+				 //			 console.log("step: done");
+			     });
+		return;
+	    } else {
+		alert("Bad Value: Try again");
+	    }
+	}
+	SOL6502.busy = false;
+	SOL6502.enableButtons();
+    },
+    
+    memScrollStartMove: function(ev) {
+	if (SOL6502.busy) return;
+	console.log("memScrollStartMove: " + ev);
+	SOL6502.busy = true;
+        SOL6502.disableButtons();
+	SOL6502.memScroll.sprite.addEventListener('mousemove', SOL6502.memScrollMove);
+	SOL6502.memScroll.sprite.addEventListener('mouseup',  SOL6502.memScrollMoveEnd);
+    },
+
+    memScrollMove: function(ev) {
+//	console.log("memScrollMove: " + ev.movementX + " " + ev.movementY + " cy: " + SOL6502.memScroll.sprite.cy.baseVal.value	);
+	SOL6502.memScroll.sprite.cy.baseVal.value += ev.movementY;
+    },
+
+    memScrollMoveEnd: function(ev) {
+	console.log("memScrollMoveEnd");
+	SOL6502.memScroll.sprite.removeEventListener('mousemove', SOL6502.memScrollMove);
+	SOL6502.memScroll.sprite.removeEventListener('mouseup',  SOL6502.memScrollMoveEnd);
+	SOL6502.busy = false;
+	SOL6502.enableButtons();
+    },
+    
     memUpdate: function(i) {
 	if (this.busy) return;
 	this.busy = true;
@@ -6521,6 +6573,9 @@ var _c_step = Module["_c_step"] = createExportWrapper("c_step");
 
 /** @type {function(...*):?} */
 var _c_run = Module["_c_run"] = createExportWrapper("c_run");
+
+/** @type {function(...*):?} */
+var _c_displayMem = Module["_c_displayMem"] = createExportWrapper("c_displayMem");
 
 /** @type {function(...*):?} */
 var _c_updateMem = Module["_c_updateMem"] = createExportWrapper("c_updateMem");
