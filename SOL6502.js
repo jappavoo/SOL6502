@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/unknown.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "751b15dc-c094-4556-acbc-2c650dabb321"});
+   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "707b0ddd-ee31-4745-82a9-dd5575588b42"});
   
   })();
   
@@ -465,9 +465,28 @@ class Bus {
 };
 
 const SOL6502 = {
-    
-    mainDone: function(ptr) {
-	//	console.log('mainDone');
+
+    // When Main is done file system init will have finished
+    // and image img should have been loaded by main
+    mainDone: function(img) {
+	//	console.log('mainDone:' + img);
+	// fixme don't hard code directory use img path to figure it out
+	this.appsNode = FS.lookupPath("apps/").node;
+	if (FS.isDir(this.appsNode.mode)) {
+	    let i = 0;
+	    for (let f in this.appsNode.contents) {
+//		console.log("apps: f: " + f);
+		let option = document.createElement("option");
+		option.text = f;
+		this.imgSelect.add(option, i);
+		if (img == ("apps/" + f)) {
+//		    console.log("match: " + img + " == apps/" + f);
+		    this.imgSelect.selectedIndex = i;
+		    this.curImgText.textContent = f;
+		}
+		i++;
+	    }
+	}
 	this.busy = false;
 	this.enableButtons();
     },
@@ -579,6 +598,8 @@ const SOL6502 = {
 	this.FH_DC_BUS = new Bus('fetch-decode-bus','loopCircle');
 	this.DC_EX_BUS = new Bus('decode-execute-bus','loopCircle');
 	this.EX_FH_BUS = new Bus('execute-fetch-bus','loopCircle');
+	this.imgSelect = document.getElementById('imgSelect');
+	this.curImgText = document.getElementById('curImgText');
 	this.speedSetting = document.getElementById("speedSetting");
 	this.speedSetting.value = (AnimationSpeed / AnimationMaxSpeed)*100;
 	this.speedSetting.oninput = function() {
@@ -711,12 +732,14 @@ const SOL6502 = {
 	this.stepButton.disabled = true;
 	this.runButton.disabled = true;
 	this.resetButton.disabled = true;
+	this.imgSelect.disabled = true;
     },
 
     enableButtons: function() {
 	this.stepButton.disabled = false;
 	this.runButton.disabled = false;
 	this.resetButton.disabled = false;
+	this.imgSelect.disabled = false;
     },
 
     reset: function() {
@@ -733,7 +756,30 @@ const SOL6502 = {
 //			 console.log("step: done");
 		     });	
     },
-    
+
+    selectImg: function() {
+//	console.log("selectImg");
+	if (this.busy) return;
+	this.busy = true;
+	this.disableButtons();
+	var img = "apps/" + this.imgSelect.value;
+//	console.log("img: " + img);
+	var buf = Module._malloc(img.length+1);
+	stringToUTF8(img, buf, img.length+1);
+//	console.log("buf: " + buf);
+	Module.ccall("c_loadImg",
+		     null,
+		     ['number'],
+		     [buf],
+		     {async: true}).then(result => {
+//			 console.log("selectImg: done " + buf);
+			 Module._free(buf);
+			 this.curImgText.textContent = img;
+			 this.busy = false;
+			 this.enableButtons();
+		     });
+		     
+    },
     step: function() {
 	// console.log("SOL6502.step()")
 	if (this.busy) return;
@@ -2592,7 +2638,7 @@ function isActiveMC_MEM_ABUS(){ return SOL6502.MC_MEM_ABUS.active; }
 function isActiveMC_MEM_DBUS(){ return SOL6502.MC_MEM_DBUS.active; }
 function isActiveMC_OUT_ABUS(){ return SOL6502.MC_OUT_ABUS.active; }
 function isActiveMC_OUT_DBUS(){ return SOL6502.MC_OUT_DBUS.active; }
-function mainDone(){ SOL6502.mainDone(); }
+function mainDone(img){ SOL6502.mainDone(UTF8ToString(img)); }
 function readConsole(){ SOL6502.readConsole(); }
 function resetINLocFill(delay){ SOL6502.inputLoc.resetFill(delay); }
 function resetMEMLocFill(i,delay){ SOL6502.memLocs[i].resetFill(delay); }
@@ -6628,6 +6674,9 @@ var _c_displayMem = Module["_c_displayMem"] = createExportWrapper("c_displayMem"
 
 /** @type {function(...*):?} */
 var _c_updateMem = Module["_c_updateMem"] = createExportWrapper("c_updateMem");
+
+/** @type {function(...*):?} */
+var _c_loadImg = Module["_c_loadImg"] = createExportWrapper("c_loadImg");
 
 /** @type {function(...*):?} */
 var _c_reset = Module["_c_reset"] = createExportWrapper("c_reset");
