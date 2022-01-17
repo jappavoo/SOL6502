@@ -1706,6 +1706,7 @@
 </svg>
 </div>
 <p>
+<button onclick="SOL6502.help()" id="helpButton">help</button>
 <button onclick="SOL6502.step()" id="stepButton" disabled>step</button>
 <button onclick="SOL6502.run()" id="runButton" disabled>run</button>
 <button title="halt when current instruction is done" onclick="SOL6502.halt()" id="haltButton" disabled>halt</button>
@@ -1720,6 +1721,7 @@
 
 <h2>SOL6502 ASCII CONSOLE TERMINAL:  device address 1111111100000000</h2>
 <h2 style="background-color:yellow; color:red" id="ConsoleStatusText">Status:</h2>
+<button onclick="SOL6502.clearConsole()" id="clearConsoleButton">clear</button>
 <div id="console">
 </div>
 </body>

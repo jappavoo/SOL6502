@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "707b0ddd-ee31-4745-82a9-dd5575588b42"});
+   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "c92e0e0f-f7c2-4a7d-b4ee-aadd4c8e8024"});
   
   })();
   
@@ -466,29 +466,41 @@ class Bus {
 
 const SOL6502 = {
 
+    
     // When Main is done file system init will have finished
     // and image img should have been loaded by main
     mainDone: function(img) {
 	//	console.log('mainDone:' + img);
+	this.loadImgSelections(img);
+	this.busy = false;
+	this.enableButtons();
+    },
+
+    loadImgSelections: function(img) {
 	// fixme don't hard code directory use img path to figure it out
+
+	// clear options if there are any
+	let num = this.imgSelect.length;
+	for (let i = 0; i<num; i++) {
+	    this.imgSelect.remove(i);
+	}
+	
 	this.appsNode = FS.lookupPath("apps/").node;
 	if (FS.isDir(this.appsNode.mode)) {
 	    let i = 0;
 	    for (let f in this.appsNode.contents) {
-//		console.log("apps: f: " + f);
+		//		console.log("apps: f: " + f);
 		let option = document.createElement("option");
 		option.text = f;
 		this.imgSelect.add(option, i);
 		if (img == ("apps/" + f)) {
-//		    console.log("match: " + img + " == apps/" + f);
+		    //		    console.log("match: " + img + " == apps/" + f);
 		    this.imgSelect.selectedIndex = i;
 		    this.curImgText.textContent = f;
 		}
 		i++;
 	    }
 	}
-	this.busy = false;
-	this.enableButtons();
     },
     
     init: function() {
@@ -603,11 +615,31 @@ const SOL6502 = {
 	this.speedSetting = document.getElementById("speedSetting");
 	this.speedSetting.value = (AnimationSpeed / AnimationMaxSpeed)*100;
 	this.speedSetting.oninput = function() {
+	    let lastSpeed = AnimationSpeed;
 	    AnimationSpeed = AnimationMaxSpeed * (this.value/100);
+	    if (lastSpeed == AnimationMaxSpeed && AnimationSpeed < AnimationMaxSpeed) {
+		Module.ccall('c_enable',
+			     null,
+			     [],
+			     [],
+			     {async:true});
+		
+	    }
+	    if (lastSpeed != AnimationSpeed && AnimationSpeed == AnimationMaxSpeed) {
+		Module.ccall('c_disable',
+			     null,
+			     [],
+			     [],
+			     {async:true});
+	    }
 //	    console.log("speed: " + this.value + "AnimationSpeed: " + AnimationSpeed);
 	}
     },
 
+    help: function() {
+	alert("SOL6502: The 'Under the Covers: Secret Life of Software' Computer\nThis is a computer simulation.  The CPU is modeled after the MOS 6502.\nAdd some more useful explantions here on how to use it.");
+	
+    },
     gotoMemFrac: function(frac) {	
 	if (SOL6502.busy) return;
 	if (frac > 1.0) frac=1.0;
@@ -710,6 +742,14 @@ const SOL6502 = {
 	let newValue = prompt(this.regs[r].name,  this.regs[r].label.textContent);
 	console.log("NYI: " + this.regs[r].name + " <- " + newValue)
     },
+
+    clearConsole: function() {
+	if (this.consoleActive != 0) return;
+	// console.log("clear");
+	this.console.clear();
+	this.console.write('\x1b[H\x1b[2J');
+	this.console.clear();
+    },
     
     writeConsole: function(buf) {
 	if (this.consoleActive != 0) return;
@@ -777,6 +817,8 @@ const SOL6502 = {
 			 this.curImgText.textContent = img;
 			 this.busy = false;
 			 this.enableButtons();
+			 this.reset();
+			 this.clearConsole();
 		     });
 		     
     },
@@ -838,7 +880,7 @@ const SOL6502 = {
 	ev.preventDefault();
     },
     dropHandler: function (ev) {
-	console.log('File(s) dropped');
+//	console.log('File(s) dropped');
 	
 	// Prevent default behavior (Prevent file from being opened)
 	ev.preventDefault();
@@ -855,12 +897,17 @@ const SOL6502 = {
 		file = ev.dataTransfer.files[0];
 	    }
 	} 
-	console.log('... file.name = ' + file.name + " 2**16= " + 2**16 + ' size: ' + file.size);
+//	console.log('... file.name = ' + file.name + " 2**16= " + 2**16 + ' size: ' + file.size);
 	if (file.size != 2**16) {
 	    alert("Memory file must be " + 2**16 + " bytes ... file: " + file.name + "size: " + file.size);
 	} else {
 	    file.arrayBuffer().then(buffer => {
-		console.log("buffer loaded..." +  buffer.byteLength);
+		const view = new Uint8Array(buffer);
+//		console.log("buffer loaded..." +  buffer.byteLength);
+		FS.writeFile("apps/" + file.name, view, {flags: 'w+' });
+//		console.log("buffer written to " + "apps/" + file.name);
+		SOL6502.loadImgSelections("apps/" + file.name);
+		SOL6502.selectImg();
 	    });
 	}
     }
@@ -6668,6 +6715,12 @@ var _c_step = Module["_c_step"] = createExportWrapper("c_step");
 
 /** @type {function(...*):?} */
 var _c_run = Module["_c_run"] = createExportWrapper("c_run");
+
+/** @type {function(...*):?} */
+var _c_disable = Module["_c_disable"] = createExportWrapper("c_disable");
+
+/** @type {function(...*):?} */
+var _c_enable = Module["_c_enable"] = createExportWrapper("c_enable");
 
 /** @type {function(...*):?} */
 var _c_displayMem = Module["_c_displayMem"] = createExportWrapper("c_displayMem");
