@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/misc/uchess.in", "start": 262144, "end": 262291}, {"filename": "/misc/hello.in", "start": 262291, "end": 262306}], "remote_package_size": 262306, "package_uuid": "52f81f26-f649-452d-9a27-c40a5f6cf467"});
+   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/apps/zero.img", "start": 262144, "end": 327680}, {"filename": "/misc/uchess.in", "start": 327680, "end": 327827}, {"filename": "/misc/hello.in", "start": 327827, "end": 327842}], "remote_package_size": 327842, "package_uuid": "34f951d7-7261-4e5b-9c2c-88b367c15221"});
   
   })();
   
@@ -665,7 +665,7 @@ const SOL6502 = {
 	if (SOL6502.busy) return;
 	SOL6502.busy = true;
 	SOL6502.disableButtons();
-	let newValue = prompt("Enter Address display:",
+	let newValue = prompt("Enter Address to display:",
 			      SOL6502.memLocs[0].addr.toString(SOL6502.base));
 	if (newValue != null) {
 	    newValue = parseInt(newValue, SOL6502.base);
@@ -690,7 +690,7 @@ const SOL6502 = {
     
     memScrollStartMove: function(ev) {
 	if (SOL6502.busy) return;
-	console.log("memScrollStartMove: " + ev);
+//	console.log("memScrollStartMove: " + ev);
 	SOL6502.busy = true;
         SOL6502.disableButtons();
 	SOL6502.memScroll.sprite.addEventListener('mousemove', SOL6502.memScrollMove);
@@ -739,8 +739,26 @@ const SOL6502 = {
 
     regUpdate: function(r) {
 	if (this.busy) return;
-	let newValue = prompt(this.regs[r].name,  this.regs[r].label.textContent);
-	console.log("NYI: " + this.regs[r].name + " <- " + newValue)
+	let reg = this.regs[r];
+	let newValue = prompt(reg.name,  reg.label.textContent);
+	// console.log("regUpdate: " + this.regs[r].name + " <- " + newValue)
+	if (newValue != null) {
+	    newValue = parseInt(newValue, SOL6502.base);
+	    if (!isNaN(newValue) && newValue >=0 && newValue <= 2**reg.bits ) {
+		Module.ccall('c_updateReg' + reg.name, // name of C function
+			     null, // return type
+			     ['number'], // argument types
+			     [newValue], // arguments
+			     {async: true}).then(result => {
+				 SOL6502.busy = false;
+				 SOL6502.enableButtons();
+				 //			 console.log("step: done");
+			     });
+		return;
+	    } else {
+		alert("Bad Value: Try again");
+	    }
+	}
     },
 
     clearConsole: function() {
@@ -6724,6 +6742,30 @@ var _c_enable = Module["_c_enable"] = createExportWrapper("c_enable");
 
 /** @type {function(...*):?} */
 var _c_displayMem = Module["_c_displayMem"] = createExportWrapper("c_displayMem");
+
+/** @type {function(...*):?} */
+var _c_updateRegX = Module["_c_updateRegX"] = createExportWrapper("c_updateRegX");
+
+/** @type {function(...*):?} */
+var _c_updateRegY = Module["_c_updateRegY"] = createExportWrapper("c_updateRegY");
+
+/** @type {function(...*):?} */
+var _c_updateRegA = Module["_c_updateRegA"] = createExportWrapper("c_updateRegA");
+
+/** @type {function(...*):?} */
+var _c_updateRegSP = Module["_c_updateRegSP"] = createExportWrapper("c_updateRegSP");
+
+/** @type {function(...*):?} */
+var _c_updateRegP = Module["_c_updateRegP"] = createExportWrapper("c_updateRegP");
+
+/** @type {function(...*):?} */
+var _c_updateRegPC = Module["_c_updateRegPC"] = createExportWrapper("c_updateRegPC");
+
+/** @type {function(...*):?} */
+var _c_updateRegDBB = Module["_c_updateRegDBB"] = createExportWrapper("c_updateRegDBB");
+
+/** @type {function(...*):?} */
+var _c_updateRegABR = Module["_c_updateRegABR"] = createExportWrapper("c_updateRegABR");
 
 /** @type {function(...*):?} */
 var _c_updateMem = Module["_c_updateMem"] = createExportWrapper("c_updateMem");
