@@ -1715,9 +1715,10 @@
 <label for="img">Load img:</label>
 <select onchange="SOL6502.selectImg()" name="img" id="imgSelect" disabled>
 </select>
-<label for="curImg">Current Memory Image: </label><label name="curImg" id="curImgText"></label>
+<!-- <label for="curImg">Current Memory Image: </label><label name="curImg" id="curImgText"></label> -->
+<label for="animation">Animation On:</label> <input name="animation" type="checkbox" id="animationCheck" onclick="SOL6502.setAnimation()" checked disabled>
 <label for="speed">Speed:</label>
-<input name="speed "type="range" min="1" max="100" value="50" class="slider" id="speedSetting">
+<input name="speed" type="range" min="1" max="100" value="50" class="slider" id="speedSetting">
 </p>
 
 <h2>SOL6502 ASCII CONSOLE TERMINAL:  device address 1111111100000000</h2>

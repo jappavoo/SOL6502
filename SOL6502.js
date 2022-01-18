@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/apps/zero.img", "start": 262144, "end": 327680}, {"filename": "/misc/uchess.in", "start": 327680, "end": 327827}, {"filename": "/misc/hello.in", "start": 327827, "end": 327842}], "remote_package_size": 327842, "package_uuid": "34f951d7-7261-4e5b-9c2c-88b367c15221"});
+   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/apps/zero.img", "start": 262144, "end": 327680}, {"filename": "/misc/uchess.in", "start": 327680, "end": 327827}, {"filename": "/misc/hello.in", "start": 327827, "end": 327842}], "remote_package_size": 327842, "package_uuid": "b0d94244-8260-4491-aeb9-925b096614ca"});
   
   })();
   
@@ -496,7 +496,7 @@ const SOL6502 = {
 		if (img == ("apps/" + f)) {
 		    //		    console.log("match: " + img + " == apps/" + f);
 		    this.imgSelect.selectedIndex = i;
-		    this.curImgText.textContent = f;
+//		    this.curImgText.textContent = f;
 		}
 		i++;
 	    }
@@ -611,31 +611,33 @@ const SOL6502 = {
 	this.DC_EX_BUS = new Bus('decode-execute-bus','loopCircle');
 	this.EX_FH_BUS = new Bus('execute-fetch-bus','loopCircle');
 	this.imgSelect = document.getElementById('imgSelect');
-	this.curImgText = document.getElementById('curImgText');
+	//	this.curImgText = document.getElementById('curImgText');
+	this.animationCheck = document.getElementById('animationCheck');
 	this.speedSetting = document.getElementById("speedSetting");
 	this.speedSetting.value = (AnimationSpeed / AnimationMaxSpeed)*100;
 	this.speedSetting.oninput = function() {
 	    let lastSpeed = AnimationSpeed;
 	    AnimationSpeed = AnimationMaxSpeed * (this.value/100);
-	    if (lastSpeed == AnimationMaxSpeed && AnimationSpeed < AnimationMaxSpeed) {
-		Module.ccall('c_enable',
-			     null,
-			     [],
-			     [],
-			     {async:true});
-		
-	    }
-	    if (lastSpeed != AnimationSpeed && AnimationSpeed == AnimationMaxSpeed) {
-		Module.ccall('c_disable',
-			     null,
-			     [],
-			     [],
-			     {async:true});
-	    }
 //	    console.log("speed: " + this.value + "AnimationSpeed: " + AnimationSpeed);
 	}
     },
 
+    setAnimation: function() {
+	if (this.animationCheck.checked == true) {
+	    Module.ccall('c_enable',
+			 null,
+			 [],
+			 [],
+			 {async:true});
+	    
+	} else {
+	    Module.ccall('c_disable',
+			 null,
+			 [],
+			 [],
+			 {async:true});
+	}
+    },
     help: function() {
 	alert("SOL6502: The 'Under the Covers: Secret Life of Software' Computer\nThis is a computer simulation.  The CPU is modeled after the MOS 6502.\nAdd some more useful explantions here on how to use it.");
 	
@@ -791,6 +793,7 @@ const SOL6502 = {
 	this.runButton.disabled = true;
 	this.resetButton.disabled = true;
 	this.imgSelect.disabled = true;
+	this.animationCheck.disabled = true;
     },
 
     enableButtons: function() {
@@ -798,6 +801,7 @@ const SOL6502 = {
 	this.runButton.disabled = false;
 	this.resetButton.disabled = false;
 	this.imgSelect.disabled = false;
+	this.animationCheck.disabled = false;
     },
 
     reset: function() {
@@ -832,7 +836,7 @@ const SOL6502 = {
 		     {async: true}).then(result => {
 //			 console.log("selectImg: done " + buf);
 			 Module._free(buf);
-			 this.curImgText.textContent = img;
+//			 this.curImgText.textContent = img;
 			 this.busy = false;
 			 this.enableButtons();
 			 this.reset();
@@ -879,7 +883,7 @@ const SOL6502 = {
     
     halt: function() {
 	if (!this.busy) return;
-	var state = Module.getValue(this.c_ui_event_ptr, "i32");
+//	var state = Module.getValue(this.c_ui_event_ptr, "i32");
 //	console.log("halt: " + state);
 	Module.setValue(this.c_ui_event_ptr, 1);
 	this.haltButton.disabled = true;
