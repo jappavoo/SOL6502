@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/apps/zero.img", "start": 262144, "end": 327680}, {"filename": "/misc/uchess.in", "start": 327680, "end": 327827}, {"filename": "/misc/hello.in", "start": 327827, "end": 327842}], "remote_package_size": 327842, "package_uuid": "b0d94244-8260-4491-aeb9-925b096614ca"});
+   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/apps/zero.img", "start": 262144, "end": 327680}, {"filename": "/misc/uchess.in", "start": 327680, "end": 327827}, {"filename": "/misc/hello.in", "start": 327827, "end": 327842}], "remote_package_size": 327842, "package_uuid": "5d6641f6-df70-4f6a-95ec-761394b5350c"});
   
   })();
   
