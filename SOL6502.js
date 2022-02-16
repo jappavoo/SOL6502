@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/apps/zero.img", "start": 262144, "end": 327680}, {"filename": "/misc/uchess.in", "start": 327680, "end": 327827}, {"filename": "/misc/hello.in", "start": 327827, "end": 327842}], "remote_package_size": 327842, "package_uuid": "b5fd19f7-8a7e-4a98-8780-b2e5c993b751"});
+   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/apps/zero.img", "start": 262144, "end": 327680}, {"filename": "/misc/uchess.in", "start": 327680, "end": 327827}, {"filename": "/misc/hello.in", "start": 327827, "end": 327842}], "remote_package_size": 327842, "package_uuid": "3a0e5d70-f07d-48d5-a02a-1f8d919efeb7"});
   
   })();
   
@@ -537,9 +537,10 @@ const SOL6502 = {
 	this.ADDRMODEINFO = new Info(document.getElementById('ADDRMODEInfoText'));
 	this.OPCODEINFO = new Info(document.getElementById('OPCODEInfoText'));
 
-	this.memScroll = new Sprite('memScroll','memCircle', null, this.gotoMem, this.gotoMemFrac);
-				    //SOL6502.memScrollStartMove);
-	
+	this.memScroll = new Sprite('memScroll','memCircle', null, this.gotoMem
+				    //this.gotoMemFrac,
+				    //SOL6502.memScrollStartMove
+				   );
 	this.memLocs = [];
 
 	for (let i = 0; i<24; i++) {
