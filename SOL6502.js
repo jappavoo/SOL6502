@@ -204,7 +204,7 @@ Module['FS_createPath']("/", "misc", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/apps/zero.img", "start": 262144, "end": 327680}, {"filename": "/misc/uchess.in", "start": 327680, "end": 327827}, {"filename": "/misc/hello.in", "start": 327827, "end": 327842}], "remote_package_size": 327842, "package_uuid": "3a0e5d70-f07d-48d5-a02a-1f8d919efeb7"});
+   loadPackage({"files": [{"filename": "/apps/uchess.img", "start": 0, "end": 65536}, {"filename": "/apps/concpy.img", "start": 65536, "end": 131072}, {"filename": "/apps/memcpy.img", "start": 131072, "end": 196608}, {"filename": "/apps/hello.img", "start": 196608, "end": 262144}, {"filename": "/apps/zero.img", "start": 262144, "end": 327680}, {"filename": "/misc/uchess.in", "start": 327680, "end": 327827}, {"filename": "/misc/hello.in", "start": 327827, "end": 327842}], "remote_package_size": 327842, "package_uuid": "f2c9f62a-7882-4eb1-b6b2-513750da42b9"});
   
   })();
   
@@ -290,20 +290,29 @@ class Register {
     label;
     name;
     buses = [];
+    base = 0;
     
-    constructor(bits, v, label, name) {
+    constructor(bits, v, label, name, base=0) {
 	this.bits = bits;
 	this.value = v & ((1<<bits)-1);
 	this.label = label;
 	this.name = name;
+	this.base = base;
 	this.label.onclick = function () {
 	    SOL6502.regUpdate(name);
 	}
     }
     
     valueToString() {
-	var s = this.value.toString(2);
-	while (s.length < this.bits) s = "0" + s;
+	var b;
+	if (this.base) b=this.base;
+	else b=SOL6502.base;
+	var s = this.value.toString(b);
+	if (b == 2) {
+	    while (s.length < this.bits) s = "0" + s;
+	} else {
+	    while (s.length < this.bits/4) s = "0" + s;
+	}
 	return s;
     }
     
@@ -528,7 +537,7 @@ const SOL6502 = {
 			      document.getElementById('YValueText'), "Y");
 	this.regs["Y"] = this.Y;
 	this.P = new Register(8, 0x00,
-			      document.getElementById('PValueText'), "P");
+			      document.getElementById('PValueText'), "P",2);
 	this.regs["P"] = this.P;
 	this.SP = new Register(8, 0x00,
 			       document.getElementById('SPValueText'), "SP");
